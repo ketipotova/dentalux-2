@@ -1,0 +1,17 @@
+{
+  "name": "dentalux-instagram-bot",
+  "version": "1.0.0",
+  "description": "Instagram DM chatbot for Dentalux dental clinic powered by Claude",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "express": "^4.21.0"
+  }
+}

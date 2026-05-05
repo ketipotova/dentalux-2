@@ -1,0 +1,65 @@
+{
+  "clinic": {
+    "name": "Dentalux",
+    "city": "Batumi, Georgia",
+    "address": "ზ. გორგილაძის ქ. 69, ბათუმი",
+    "phones": ["+995 514 22 10 10", "0322 11 02 06"],
+    "email": "dentalux.costumers@gmail.com",
+    "website": "https://dentalux.ge",
+    "social": {
+      "facebook": "https://www.facebook.com/ltdDentaLux",
+      "instagram": "https://instagram.com/dentalux.ge"
+    },
+    "google_maps": "https://maps.app.goo.gl/F4uy3XTXaGfeXxV38",
+    "working_hours": {
+      "monday_friday": "10:00–19:00",
+      "saturday": "10:00–16:00",
+      "sunday": "closed"
+    }
+  },
+  "services": [
+    { "name": "იმპლანტაცია / Implantation", "brands": ["Straumann", "Neodent", "X-Gate", "MIS"], "price_from_gel": 1000 },
+    { "name": "პროფესიული წმენდა / Professional Cleaning", "price_from_gel": 170 },
+    { "name": "კარიესის მკურნალობა / Caries Treatment", "price_from_gel": 150 },
+    { "name": "რესტავრაცია კომპოზიტით / Composite Restoration", "price_from_gel": 300 },
+    { "name": "ვინირები / Veneers", "price_from_gel": 900 },
+    { "name": "გრილზი / Grillz", "note": "Gold, silver, with gems", "price_from_gel": 150 },
+    { "name": "სიბრძნის კბილის ამოღება / Wisdom Tooth Extraction", "price_from_gel": 200 },
+    { "name": "კბილის ამოღება / Tooth Extraction", "price_from_gel": 150 },
+    { "name": "გინგივოპლასტიკა / Gingivoplasty", "price_from_gel": 500 },
+    { "name": "კბილების გათეთრება / Teeth Whitening", "price_from_gel": 450 },
+    { "name": "ორთოდონტიული მკურნალობა / Orthodontics (Braces)", "price_from_gel": 1000 },
+    { "name": "პროთეზირება Zirconium / Zirconium Prosthetics", "price_from_gel": 550 },
+    { "name": "პროთეზირება E-max / E-max Prosthetics", "price_from_gel": 900 },
+    { "name": "ორთოდონტიული კონსულტაცია / Orthodontic Consultation", "price_from_gel": 50 }
+  ],
+  "payment_methods": ["cash", "card", "bank_transfer"],
+  "insurance_partners": [
+    "PSP", "Irao", "Cartu", "Unison", "Benefit",
+    "GPI Holding", "Alpha", "Euroins", "New Vision", "ARDI"
+  ],
+  "insurance_requirements": "Patient must present valid ID and active insurance policy.",
+  "technology": {
+    "diagnocat_ai": {
+      "description": "AI-powered dental imaging analysis",
+      "capabilities": [
+        "Analyzes X-ray images (3D CBCT, panoramic, intraoral) in minutes",
+        "Detects 65+ conditions (caries, periodontal bone loss, canal defects, optimal implant placement)",
+        "Generates easy-to-understand PDF reports for patients"
+      ]
+    }
+  },
+  "compliance": {
+    "local": ["Georgian Ministry of Health regulations", "Georgian Stomatological Association (GSA) guidelines"],
+    "international": ["ADA (American Dental Association)", "EFP (European Federation of Periodontology)", "FDI World Dental Federation"],
+    "infection_control": "GSA and NCDC infection control standards"
+  },
+  "bot_behavior": {
+    "tone": "Professional, empathetic, and precise",
+    "default_language": "Georgian",
+    "supported_languages": ["Georgian", "English", "Russian"],
+    "language_rule": "After providing a document in a requested language, revert conversation to Georgian",
+    "disclaimer": "The bot provides information and preliminary assessments but does not replace in-person consultation with a doctor",
+    "appointment_booking": "Direct patients to call +995 514 22 10 10 (WhatsApp available) or 0322 11 02 06, or message via Facebook/Instagram"
+  }
+}
