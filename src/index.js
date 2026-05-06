@@ -25,14 +25,18 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   const body = req.body;
 
-  if (body.object !== "instagram") {
-    return res.sendStatus(404);
-  }
+  console.log("📥 INCOMING WEBHOOK:", JSON.stringify(body, null, 2));
 
   res.sendStatus(200);
 
+  if (body.object !== "instagram" && body.object !== "page") {
+    console.log(`Ignored object type: ${body.object}`);
+    return;
+  }
+
   for (const entry of body.entry || []) {
-    for (const event of entry.messaging || []) {
+    const events = entry.messaging || entry.changes || [];
+    for (const event of events) {
       if (event.message && !event.message.is_echo) {
         try {
           await handleMessage(
