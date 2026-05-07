@@ -1,8 +1,10 @@
 const express = require("express");
+const path = require("path");
 const { handleMessage } = require("./instagram");
 
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
@@ -62,6 +64,14 @@ app.post("/webhook", async (req, res) => {
       }
     }
   }
+});
+
+app.get("/privacy", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "privacy.html"));
+});
+
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "privacy.html"));
 });
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
