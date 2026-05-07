@@ -20,7 +20,7 @@ async function getResponse(userId, userMessage) {
   }
 
   const response = await client.messages.create({
-    model: "claude-opus-4-6",
+    model: "claude-opus-4-7",
     max_tokens: 1024,
     system: buildSystemPrompt(),
     messages: history,
