@@ -35,17 +35,29 @@ app.post("/webhook", async (req, res) => {
   }
 
   for (const entry of body.entry || []) {
-    const events = entry.messaging || entry.changes || [];
-    for (const event of events) {
-      if (event.message && !event.message.is_echo) {
+    // Old Messenger-style format: entry.messaging[]
+    for (const event of entry.messaging || []) {
+      if (event.message && !event.message.is_echo && event.message.text) {
         try {
-          await handleMessage(
-            event.sender.id,
-            event.message.text,
-            ACCESS_TOKEN
-          );
+          console.log(`💬 Messaging event from ${event.sender.id}: ${event.message.text}`);
+          await handleMessage(event.sender.id, event.message.text, ACCESS_TOKEN);
         } catch (err) {
-          console.error("Error handling message:", err);
+          console.error("Error handling messaging event:", err);
+        }
+      }
+    }
+
+    // New IG-login format: entry.changes[].value
+    for (const change of entry.changes || []) {
+      if (change.field !== "messages") continue;
+      const event = change.value;
+      if (!event) continue;
+      if (event.message && !event.message.is_echo && event.message.text) {
+        try {
+          console.log(`💬 IG message from ${event.sender?.id}: ${event.message.text}`);
+          await handleMessage(event.sender.id, event.message.text, ACCESS_TOKEN);
+        } catch (err) {
+          console.error("Error handling IG change event:", err);
         }
       }
     }
