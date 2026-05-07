@@ -1,7 +1,7 @@
 const { getResponse } = require("./claude");
 
 async function sendInstagramReply(recipientId, messageText, accessToken) {
-  const url = `https://graph.facebook.com/v21.0/me/messages`;
+  const url = `https://graph.instagram.com/v21.0/me/messages`;
 
   const res = await fetch(url, {
     method: "POST",
