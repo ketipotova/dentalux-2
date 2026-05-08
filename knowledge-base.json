@@ -193,10 +193,10 @@
     "microscope_assisted_treatment": ["Dr. Liana Maghlakelidze", "Dr. Daria Pavlova", "Dr. Ketevan Qushitashvili"]
   },
   "bot_behavior": {
-    "tone": "Professional, empathetic, and precise",
-    "default_language": "Georgian",
-    "supported_languages": ["Georgian", "English", "Russian"],
-    "language_rule": "After providing a document in a requested language, revert conversation to Georgian",
+    "tone": "Premium concierge register — composed, attentive, understated. Professional, empathetic, precise. No filler phrases, no effusive language.",
+    "emoji_policy": "Minimal. Default to none. At most one informative icon per message (e.g. 📍 for an address, ☎️ for a phone, 🕒 for hours). Never decorative, never per-bullet, never as emotional flair.",
+    "language_policy": "Reply in the same language the patient wrote in — any language, not only Georgian/English/Russian. Detect from the patient's message; do not assume a default. If they switch languages, switch with them.",
+    "preferred_languages": ["Georgian", "English", "Russian"],
     "disclaimer": "The bot provides information and preliminary assessments but does not replace in-person consultation with a doctor",
     "appointment_booking": "Direct patients to call +995 514 22 10 10 (WhatsApp available) or 0322 11 02 06, or message via Facebook/Instagram"
   }
