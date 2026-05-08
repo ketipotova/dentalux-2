@@ -54,6 +54,144 @@
     "international": ["ADA (American Dental Association)", "EFP (European Federation of Periodontology)", "FDI World Dental Federation"],
     "infection_control": "GSA and NCDC infection control standards"
   },
+  "doctors": [
+    {
+      "name": "Dr. Nino Kushitashvili",
+      "name_ka": "დოქ. ნინო ყუშიტაშვილი",
+      "specialty": "Orthodontist",
+      "experience_years": 8,
+      "education": [
+        "Batumi Shota Rustaveli State University, Faculty of Dentistry (2008–2013)",
+        "New-Dent Tbilisi residency, Orthodontics (2014–2016)",
+        "Georgian state certification — Orthodontics (2016)"
+      ],
+      "key_certifications": [
+        "Invisalign Certification Training — Align Technology Switzerland (2025)",
+        "Invisalign Conference in Georgia (2021)",
+        "DAMON SMILE — Bader Borgan (2019)",
+        "Ravindra Nanda — Biomechanics & Aesthetics, Baku (2019)",
+        "Implantology Phantom Course — Buba Chachkhiani (2023)"
+      ],
+      "services": ["orthodontic treatment", "Damon Smile braces", "Invisalign clear aligners", "individual treatment planning"],
+      "schedule": "Mon, Wed, Fri 10:00–18:00",
+      "branch": "Gorgiladze 69"
+    },
+    {
+      "name": "Dr. Liana (Lia) Maghlakelidze",
+      "name_ka": "დოქ. ლიანა (ლია) მაღლაკელიძე",
+      "specialty": "Therapist–Endodontist (microscope-assisted)",
+      "experience_years": 31,
+      "education": [
+        "Kharkov State Medical University, Faculty of Dentistry (1989–1992)",
+        "Tbilisi State Medical University, Faculty of Dentistry (1993–1994)",
+        "Georgian state certifications — Therapeutic Dentistry (1994, re-certified 2001)"
+      ],
+      "key_seminars": [
+        "Murat Savur (DENTSPLY) — Endodontic Treatment Success (2011)",
+        "Pain Management in Dentistry — GDPA (2018)",
+        "Elena Klimenko, Kiev — Patient Care & Maintenance Therapy (2021)",
+        "Mikhail Solomonov — Endodontics & Complications (2024)"
+      ],
+      "services": ["therapeutic dentistry", "endodontic treatment (root canal)", "microscope-assisted treatment", "tooth restoration", "caries treatment"],
+      "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00"
+    },
+    {
+      "name": "Dr. Daria Pavlova",
+      "name_ka": "დოქ. დარია პავლოვა",
+      "specialty": "Therapeutic Dentist",
+      "education": ["Kursk State Medical University, Faculty of Dentistry (2012–2017)"],
+      "focus": ["therapeutic dentistry", "aesthetic restorations", "endodontic treatment", "initial periodontal management"],
+      "services": ["aesthetic restorations", "composite veneers", "endodontics under microscope", "complex therapeutic care"],
+      "tools": ["rubber dam isolation", "modern composite materials", "endodontic microscope", "dental photography"],
+      "level": "Mid-level, independent practice"
+    },
+    {
+      "name": "Dr. Eteri Diasamidze",
+      "name_ka": "დოქ. ეთერი დიასამიძე",
+      "specialty": "Periodontist",
+      "experience_years": 25,
+      "education": ["Batumi State University, Faculty of Dentistry (1990–1995)"],
+      "focus": ["periodontology", "periodontitis treatment", "peri-implantitis management", "preventive therapy"],
+      "level": "Senior, independent practice"
+    },
+    {
+      "name": "Dr. Irakli Antia",
+      "name_ka": "დოქ. ირაკლი ანთია",
+      "specialty": "Oral Surgeon — Implantologist",
+      "experience_years": 15,
+      "education": ["Saint Petersburg State Medical University"],
+      "focus": ["dental implantation", "bone augmentation", "advanced surgical procedures"],
+      "expertise": ["implant placement", "sinus lifting", "bone grafting", "complex extractions", "microsurgery"]
+    },
+    {
+      "name": "Dr. Maia Talikadze",
+      "name_ka": "დოქ. მაია ტალიკაძე",
+      "specialty": "Therapeutic Dentist",
+      "education": ["Tbilisi State University, Faculty of Dentistry (2003–2008)"],
+      "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
+      "level": "Mid-level, independent practice"
+    },
+    {
+      "name": "Dr. Megi Mamuladze",
+      "name_ka": "დოქ. მეგი მამულაძე",
+      "specialty": "Therapeutic Dentist",
+      "education": ["Tbilisi State University, Faculty of Dentistry (2003–2005)"],
+      "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
+      "level": "Mid-level, independent practice"
+    },
+    {
+      "name": "Dr. Tekla Kupatadze",
+      "name_ka": "დოქ. თეკლა კუპატაძე",
+      "specialty": "Surgeon–Therapist (Pediatric focus)",
+      "focus": ["pediatric dentistry", "general therapeutic dentistry", "surgical dentistry"],
+      "recent_training_2024": [
+        "Pediatric dentistry with modern protocols",
+        "Infection control in dental clinics",
+        "Patient rights, medical ethics & communication",
+        "Emergency medical care",
+        "Management of complex endodontic cases"
+      ],
+      "level": "Junior with high growth potential"
+    },
+    {
+      "name": "Dr. Miranda Malakmadze",
+      "name_ka": "დოქ. მირანდა მალაყმაძე",
+      "specialty": "Therapist–Surgeon–Implantologist",
+      "experience_years": 10,
+      "education": [
+        "Batumi Independent University, Stomatology (2002–2007)",
+        "Kharkov Medical Academy (XMAPO) — postgraduate residency in Therapeutic Dentistry (2010–2012)",
+        "Georgian state certifications — Therapeutic Stomatology (2013), Oral Surgery (2016)",
+        "Basic Dental Implantology course (2019)"
+      ],
+      "key_certifications": [
+        "Ukrainian Endodontic Association — Modern Endodontic Technologies (2012)",
+        "Mtwo / Reciproc / 3D obturation with thermoplastic gutta-percha (2012)"
+      ],
+      "languages": ["Georgian (native)", "Russian (fluent)", "English (fluent)"]
+    },
+    {
+      "name": "Dr. Ketevan Qushitashvili",
+      "name_ka": "დოქ. ქეთევან ყუშიტაშვილი",
+      "specialty": "Aesthetic & Prosthetic Dentistry (microscope-assisted)",
+      "focus": ["aesthetic dentistry", "prosthetics", "microscope-assisted treatment"],
+      "_profile_status": "Detailed profile pending; included per clinic doctor flow"
+    }
+  ],
+  "doctor_routing": {
+    "_description": "Recommend the right doctor based on the patient's chief complaint, then move to booking.",
+    "therapeutic_caries_pain": ["Dr. Liana Maghlakelidze", "Dr. Daria Pavlova", "Dr. Megi Mamuladze", "Dr. Maia Talikadze"],
+    "endodontic_pulpitis_root_canal": {
+      "primary": "Dr. Liana Maghlakelidze",
+      "additional": ["Dr. Daria Pavlova"]
+    },
+    "implant_or_complex_surgery": ["Dr. Irakli Antia"],
+    "pediatric": ["Dr. Tekla Kupatadze"],
+    "orthodontic_braces_aligners": ["Dr. Nino Kushitashvili"],
+    "aesthetic_or_prosthetic": ["Dr. Ketevan Qushitashvili"],
+    "periodontal_gums": ["Dr. Eteri Diasamidze"],
+    "microscope_assisted_treatment": ["Dr. Liana Maghlakelidze", "Dr. Daria Pavlova", "Dr. Ketevan Qushitashvili"]
+  },
   "bot_behavior": {
     "tone": "Professional, empathetic, and precise",
     "default_language": "Georgian",

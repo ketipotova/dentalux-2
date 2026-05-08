@@ -15,6 +15,37 @@ function buildSystemPrompt() {
     })
     .join("\n");
 
+  const doctors = (kb.doctors || [])
+    .map((d) => {
+      const parts = [`- ${d.name}`];
+      parts.push(`— ${d.specialty}`);
+      if (d.experience_years) parts.push(`(${d.experience_years}+ yrs)`);
+      const detail = [];
+      if (d.focus) detail.push(d.focus.join(", "));
+      else if (d.services) detail.push(d.services.slice(0, 4).join(", "));
+      if (d.schedule) detail.push(`Schedule: ${d.schedule}`);
+      if (d.branch) detail.push(`Branch: ${d.branch}`);
+      if (d.languages) detail.push(`Languages: ${d.languages.join(", ")}`);
+      let line = parts.join(" ");
+      if (detail.length) line += `. ${detail.join(". ")}.`;
+      return line;
+    })
+    .join("\n");
+
+  const routing = kb.doctor_routing || {};
+  const routingLines = [
+    routing.therapeutic_caries_pain && `- Caries / general pain → ${routing.therapeutic_caries_pain.join(", ")}`,
+    routing.endodontic_pulpitis_root_canal && `- Pulpitis / root canal → ${routing.endodontic_pulpitis_root_canal.primary} (primary)${routing.endodontic_pulpitis_root_canal.additional ? `, ${routing.endodontic_pulpitis_root_canal.additional.join(", ")} (alt)` : ""}`,
+    routing.implant_or_complex_surgery && `- Implants / complex surgery → ${routing.implant_or_complex_surgery.join(", ")}`,
+    routing.pediatric && `- Pediatric → ${routing.pediatric.join(", ")}`,
+    routing.orthodontic_braces_aligners && `- Braces / aligners → ${routing.orthodontic_braces_aligners.join(", ")}`,
+    routing.aesthetic_or_prosthetic && `- Aesthetic / prosthetic → ${routing.aesthetic_or_prosthetic.join(", ")}`,
+    routing.periodontal_gums && `- Gums / periodontal → ${routing.periodontal_gums.join(", ")}`,
+    routing.microscope_assisted_treatment && `- Microscope-assisted treatment → ${routing.microscope_assisted_treatment.join(", ")}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return `You are the official AI assistant for Dentalux dental clinic in Batumi, Georgia.
 You help patients via Instagram DM with information about services, pricing, appointments, and insurance.
 
@@ -52,6 +83,13 @@ PAYMENT: ${kb.payment_methods.join(", ")}
 
 INSURANCE PARTNERS: ${kb.insurance_partners.join(", ")}
 ${kb.insurance_requirements}
+
+OUR DOCTORS:
+${doctors}
+
+DOCTOR ROUTING (recommend the right doctor based on the patient's chief complaint, then move to booking):
+${routingLines}
+After identifying the right doctor for the patient, briefly explain why they're a good match and ask: "გსურთ ვიზიტის დაჯავშნა?" (Would you like to book an appointment?). Keep doctor explanations short — 1–2 sentences. Do not invent doctors, schedules, or credentials beyond what is listed above; if asked something not covered, say you'll check and direct the patient to call the clinic.
 
 TECHNOLOGY: Dentalux uses Diagnocat AI for dental imaging analysis — detects 65+ conditions from X-rays and generates patient-friendly PDF reports.
 
