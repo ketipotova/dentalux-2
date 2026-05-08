@@ -73,7 +73,8 @@
         "Implantology Phantom Course — Buba Chachkhiani (2023)"
       ],
       "services": ["orthodontic treatment", "Damon Smile braces", "Invisalign clear aligners", "individual treatment planning"],
-      "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)"
+      "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
     },
     {
       "name": "Dr. Liana (Lia) Maghlakelidze",
@@ -92,7 +93,8 @@
         "Mikhail Solomonov — Endodontics & Complications (2024)"
       ],
       "services": ["therapeutic dentistry", "endodontic treatment (root canal)", "microscope-assisted treatment", "tooth restoration", "caries treatment"],
-      "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00"
+      "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Daria Pavlova",
@@ -103,7 +105,8 @@
       "services": ["aesthetic restorations", "composite veneers", "endodontics under microscope", "complex therapeutic care"],
       "tools": ["rubber dam isolation", "modern composite materials", "endodontic microscope", "dental photography"],
       "level": "Mid-level, independent practice",
-      "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)"
+      "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
     },
     {
       "name": "Dr. Eteri Diasamidze",
@@ -113,7 +116,8 @@
       "education": ["Batumi State University, Faculty of Dentistry (1990–1995)"],
       "focus": ["periodontology", "periodontitis treatment", "peri-implantitis management", "preventive therapy"],
       "level": "Senior, independent practice",
-      "schedule": "Mon–Fri 10:00–14:30, Sat 10:00–13:00"
+      "schedule": "Mon–Fri 10:00–14:30, Sat 10:00–13:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Irakli Antia",
@@ -123,7 +127,8 @@
       "education": ["Saint Petersburg State Medical University"],
       "focus": ["dental implantation", "bone augmentation", "advanced surgical procedures"],
       "expertise": ["implant placement", "sinus lifting", "bone grafting", "complex extractions", "microsurgery"],
-      "schedule": "Mon/Wed/Fri 10:00–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00"
+      "schedule": "Mon/Wed/Fri 10:00–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Maia Talikadze",
@@ -132,7 +137,8 @@
       "education": ["Tbilisi State University, Faculty of Dentistry (2003–2008)"],
       "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
       "level": "Mid-level, independent practice",
-      "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00"
+      "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Megi Mamuladze",
@@ -141,7 +147,8 @@
       "education": ["Tbilisi State University, Faculty of Dentistry (2003–2005)"],
       "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
       "level": "Mid-level, independent practice",
-      "schedule": "Mon–Fri 14:30–19:00, Sat 13:00–16:00"
+      "schedule": "Mon–Fri 14:30–19:00, Sat 13:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Tekla Kupatadze",
@@ -156,7 +163,8 @@
         "Management of complex endodontic cases"
       ],
       "level": "Junior with high growth potential",
-      "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00"
+      "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     {
       "name": "Dr. Miranda Malakmadze",
@@ -174,14 +182,16 @@
         "Mtwo / Reciproc / 3D obturation with thermoplastic gutta-percha (2012)"
       ],
       "languages": ["Georgian (native)", "Russian (fluent)", "English (fluent)"],
-      "schedule": "Mon–Fri 14:00–19:00 (no Saturday)"
+      "schedule": "Mon–Fri 14:00–19:00 (no Saturday)",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
     },
     {
       "name": "Dr. Ketevan Qushitashvili",
       "name_ka": "დოქ. ქეთევან ყუშიტაშვილი",
       "specialty": "Prosthodontist (aesthetic & prosthetic dentistry, microscope-assisted)",
       "focus": ["prosthodontics", "aesthetic dentistry", "prosthetics", "microscope-assisted treatment"],
-      "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00"
+      "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     }
   ],
   "doctor_routing": {

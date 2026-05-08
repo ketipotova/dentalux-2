@@ -5,6 +5,49 @@ const kb = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "knowledge-base.json"), "utf-8")
 );
 
+const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_LONG = {
+  Sun: "Sunday",
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+};
+const DAY_FROM_LONG = Object.fromEntries(
+  Object.entries(DAY_LONG).map(([s, l]) => [l, s])
+);
+
+function getTbilisiContext() {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Tbilisi",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(new Date());
+  const get = (type) => parts.find((p) => p.type === type)?.value;
+  const weekdayLong = get("weekday");
+  const weekdayShort = DAY_FROM_LONG[weekdayLong];
+  const todayIdx = DAY_ORDER.indexOf(weekdayShort);
+  const tomorrowShort = DAY_ORDER[(todayIdx + 1) % 7];
+  const dateStr = `${weekdayLong}, ${get("day")} ${get("month")} ${get("year")}`;
+  const timeStr = `${get("hour")}:${get("minute")}`;
+  return {
+    weekdayShort,
+    weekdayLong,
+    tomorrowShort,
+    tomorrowLong: DAY_LONG[tomorrowShort],
+    dateStr,
+    timeStr,
+  };
+}
+
 function buildSystemPrompt() {
   const services = kb.services
     .map((s) => {
@@ -33,6 +76,16 @@ function buildSystemPrompt() {
     .join("\n");
 
   const routing = kb.doctor_routing || {};
+  const todayCtx = getTbilisiContext();
+  const availableToday = (kb.doctors || [])
+    .filter((d) => (d.working_days || []).includes(todayCtx.weekdayShort))
+    .map((d) => d.name)
+    .join(", ");
+  const availableTomorrow = (kb.doctors || [])
+    .filter((d) => (d.working_days || []).includes(todayCtx.tomorrowShort))
+    .map((d) => d.name)
+    .join(", ");
+
   const routingLines = [
     routing.therapeutic_caries_pain && `- Caries / general pain → ${routing.therapeutic_caries_pain.join(", ")}`,
     routing.endodontic_pulpitis_root_canal && `- Pulpitis / root canal → ${routing.endodontic_pulpitis_root_canal.primary} (primary)${routing.endodontic_pulpitis_root_canal.additional ? `, ${routing.endodontic_pulpitis_root_canal.additional.join(", ")} (alt)` : ""}`,
@@ -103,6 +156,13 @@ PAYMENT: ${kb.payment_methods.join(", ")}
 
 INSURANCE PARTNERS: ${kb.insurance_partners.join(", ")}
 ${kb.insurance_requirements}
+
+CURRENT CONTEXT (refresh this on every reply — do not assume any other date):
+- Today (Tbilisi time): ${todayCtx.dateStr}
+- Current local time: ${todayCtx.timeStr}
+- Working today (${todayCtx.weekdayLong}): ${availableToday || "no doctors today — clinic is closed on Sundays"}
+- Working tomorrow (${todayCtx.tomorrowLong}): ${availableTomorrow || "no doctors tomorrow — clinic is closed on Sundays"}
+When a patient mentions "today", "tomorrow", "now", "as soon as possible", or asks about availability, ALWAYS use the lists above to confirm which doctors are actually working that day. Never claim a doctor is available on a day they don't work. If the patient asks for the soonest visit, propose the earliest day their preferred (or routed) doctor is working, and offer to call to confirm a specific time.
 
 OUR DOCTORS:
 ${doctors}
