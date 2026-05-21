@@ -10,6 +10,9 @@ const MAX_HISTORY = 20;
 
 const GEMINI_MODEL = "gemini-3.5-flash";
 const CLAUDE_MODEL = "claude-opus-4-7";
+// Georgian tokenizes at ~6–12 tokens per character, so 1k is far too tight
+// and replies were getting truncated mid-word.
+const MAX_OUTPUT_TOKENS = 4096;
 
 async function callGemini(history, systemPrompt) {
   const geminiHistory = history.map((turn) => ({
@@ -22,7 +25,7 @@ async function callGemini(history, systemPrompt) {
     contents: geminiHistory,
     config: {
       systemInstruction: systemPrompt,
-      maxOutputTokens: 1024,
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
     },
   });
 
@@ -40,7 +43,7 @@ async function callClaude(history, systemPrompt) {
 
   const response = await anthropic.messages.create({
     model: CLAUDE_MODEL,
-    max_tokens: 1024,
+    max_tokens: MAX_OUTPUT_TOKENS,
     system: systemPrompt,
     messages: claudeHistory,
   });
