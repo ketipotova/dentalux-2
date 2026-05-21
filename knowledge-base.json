@@ -15,6 +15,16 @@
       "monday_friday": "10:00–19:00",
       "saturday": "10:00–16:00",
       "sunday": "closed"
+    },
+    "founded": 2000,
+    "founder": {
+      "name": "Dr. Gulnara Diasamidze",
+      "name_ka": "დოქ. გულნარა დიასამიძე",
+      "role": "Founder and Director of DENTALUX",
+      "experience_summary": "25+ years of clinical, educational, and managerial experience",
+      "core_values": ["Professionalism", "Innovation", "Education", "Patient Care"],
+      "mission_en": "With over 25 years of clinical, educational and managerial experience, we provide high-quality dental care, implement innovation and ensure the highest standards of professional education.",
+      "mission_ka": "25 წელზე მეტი კლინიკური, საგანმანათლებლო და მენეჯერული გამოცდილებით, ვქმნით მაღალი ხარისხის სტომატოლოგიურ მომსახურებას, ვინერგავთ ინოვაციებს და უზრუნველვყოფთ პროფესიული განათლების უმაღლეს სტანდარტებს."
     }
   },
   "services": [
@@ -56,21 +66,38 @@
   },
   "doctors": [
     {
+      "name": "Dr. Gulnara Diasamidze",
+      "name_ka": "დოქ. გულნარა დიასამიძე",
+      "specialty": "Founder & Director — Dentist",
+      "experience_years": 25,
+      "role": "Founder and Director of DENTALUX",
+      "level": "Founder / Director, Senior",
+      "focus": ["clinical leadership", "professional education", "innovation in dentistry", "patient-centered care"],
+      "core_values": ["Professionalism", "Innovation", "Education", "Patient Care"],
+      "philosophy_en": "With over 25 years of clinical, educational and managerial experience, we provide high-quality dental care, implement innovation and ensure the highest standards of professional education.",
+      "philosophy_ka": "25 წელზე მეტი კლინიკური, საგანმანათლებლო და მენეჯერული გამოცდილებით, ვქმნით მაღალი ხარისხის სტომატოლოგიურ მომსახურებას, ვინერგავთ ინოვაციებს და უზრუნველვყოფთ პროფესიული განათლების უმაღლეს სტანდარტებს.",
+      "notes": "Founded DENTALUX in 2000. On the official site team list her surname is misspelled as 'Diamidze' — the correct form is 'Diasamidze'."
+    },
+    {
       "name": "Dr. Nino Kushitashvili",
       "name_ka": "დოქ. ნინო ყუშიტაშვილი",
       "specialty": "Orthodontist",
-      "experience_years": 8,
+      "experience_years": 9,
+      "at_dentalux_since": 2016,
       "education": [
         "Batumi Shota Rustaveli State University, Faculty of Dentistry (2008–2013)",
         "New-Dent Tbilisi residency, Orthodontics (2014–2016)",
         "Georgian state certification — Orthodontics (2016)"
       ],
       "key_certifications": [
-        "Invisalign Certification Training — Align Technology Switzerland (2025)",
+        "Invisalign Certification Training (14 hrs) — Align Technology Switzerland (2025-05)",
+        "Inclusive Anchorage Therapy in Dentistry — Dentalvine / ProGroup Education (2024-11)",
+        "Advanced Orthodontics: Individual approach — AvroraClinic / iQ ORTHO (2024-01)",
+        "Implantology Phantom Course — Buba Chachkhiani (2023)",
         "Invisalign Conference in Georgia (2021)",
         "DAMON SMILE — Bader Borgan (2019)",
         "Ravindra Nanda — Biomechanics & Aesthetics, Baku (2019)",
-        "Implantology Phantom Course — Buba Chachkhiani (2023)"
+        "Passive Self-Ligation Course — FORESTADENT"
       ],
       "services": ["orthodontic treatment", "Damon Smile braces", "Invisalign clear aligners", "individual treatment planning"],
       "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)",
@@ -79,8 +106,12 @@
     {
       "name": "Dr. Liana (Lia) Maghlakelidze",
       "name_ka": "დოქ. ლიანა (ლია) მაღლაკელიძე (ცინცაბაძე)",
+      "name_variants": ["Lia Maghlakelidze", "Liana Tsintsabadze (maiden name)", "Liana Maghlakelidze"],
+      "name_note": "Same person — 'Lia' is short for 'Liana'; 'Tsintsabadze' is maiden name, 'Maghlakelidze' is married name.",
       "specialty": "Therapist–Endodontist (microscope-assisted)",
       "experience_years": 31,
+      "at_dentalux_since": 2001,
+      "level": "Senior, independent practice",
       "education": [
         "Kharkov State Medical University, Faculty of Dentistry (1989–1992)",
         "Tbilisi State Medical University, Faculty of Dentistry (1993–1994)",
@@ -99,12 +130,13 @@
     {
       "name": "Dr. Daria Pavlova",
       "name_ka": "დოქ. დარია პავლოვა",
-      "specialty": "Therapeutic Dentist",
+      "specialty": "Therapeutic Dentist (microscope, endodontics, aesthetic restorations)",
       "education": ["Kursk State Medical University, Faculty of Dentistry (2012–2017)"],
       "focus": ["therapeutic dentistry", "aesthetic restorations", "endodontic treatment", "initial periodontal management"],
       "services": ["aesthetic restorations", "composite veneers", "endodontics under microscope", "complex therapeutic care"],
       "tools": ["rubber dam isolation", "modern composite materials", "endodontic microscope", "dental photography"],
-      "level": "Mid-level, independent practice",
+      "level": "Mid-level, high development potential, Approved by Director",
+      "philosophy_en": "The goal of treatment is to restore function and maximally preserve natural aesthetics using modern, safe, and predictable methods.",
       "schedule": "Mon/Wed/Fri 10:00–14:30, Tue/Thu 14:30–19:00 (no Saturday)",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
     },
@@ -116,6 +148,7 @@
       "education": ["Batumi State University, Faculty of Dentistry (1990–1995)"],
       "focus": ["periodontology", "periodontitis treatment", "peri-implantitis management", "preventive therapy"],
       "level": "Senior, independent practice",
+      "philosophy_en": "Periodontal health is the foundation of a healthy smile.",
       "schedule": "Mon–Fri 10:00–14:30, Sat 10:00–13:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
@@ -124,9 +157,11 @@
       "name_ka": "დოქ. ირაკლი ანთია",
       "specialty": "Oral Surgeon — Implantologist",
       "experience_years": 15,
-      "education": ["Saint Petersburg State Medical University"],
+      "education": ["Saint Petersburg State Medical University", "International training in Europe"],
       "focus": ["dental implantation", "bone augmentation", "advanced surgical procedures"],
       "expertise": ["implant placement", "sinus lifting", "bone grafting", "complex extractions", "microsurgery"],
+      "level": "Senior",
+      "philosophy_en": "Safe and predictable outcomes through modern surgical techniques.",
       "schedule": "Mon/Wed/Fri 10:00–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
@@ -137,6 +172,7 @@
       "education": ["Tbilisi State University, Faculty of Dentistry (2003–2008)"],
       "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
       "level": "Mid-level, independent practice",
+      "philosophy_en": "Stable and high-quality results.",
       "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
@@ -147,6 +183,7 @@
       "education": ["Tbilisi State University, Faculty of Dentistry (2003–2005)"],
       "focus": ["general therapeutic dentistry", "restorative dentistry", "endodontics"],
       "level": "Mid-level, independent practice",
+      "philosophy_en": "High-quality and stable results.",
       "schedule": "Mon–Fri 14:30–19:00, Sat 13:00–16:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
@@ -163,6 +200,7 @@
         "Management of complex endodontic cases"
       ],
       "level": "Junior with high growth potential",
+      "philosophy_en": "Patient safety and comfort is priority.",
       "schedule": "Mon/Wed/Fri 14:30–19:00, Tue/Thu 10:00–14:30, Sat 10:00–16:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
@@ -192,6 +230,15 @@
       "focus": ["prosthodontics", "aesthetic dentistry", "prosthetics", "microscope-assisted treatment"],
       "schedule": "Mon–Fri 10:00–19:00, Sat 10:00–16:00",
       "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    },
+    {
+      "name": "Dr. Maia Gogidze",
+      "name_ka": "დოქ. მაია გოგიძე",
+      "specialty": "Periodontist",
+      "focus": ["periodontology", "gum disease treatment"],
+      "schedule": "Mon–Fri 10:00–19:00 (no Saturday)",
+      "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "notes": "Second periodontist at the clinic alongside Dr. Eteri Diasamidze (primary recommendation for periodontal cases)."
     }
   ],
   "doctor_routing": {
@@ -205,7 +252,7 @@
     "pediatric": ["Dr. Tekla Kupatadze"],
     "orthodontic_braces_aligners": ["Dr. Nino Kushitashvili"],
     "aesthetic_or_prosthetic": ["Dr. Ketevan Qushitashvili"],
-    "periodontal_gums": ["Dr. Eteri Diasamidze"],
+    "periodontal_gums": ["Dr. Eteri Diasamidze", "Dr. Maia Gogidze"],
     "microscope_assisted_treatment": ["Dr. Liana Maghlakelidze", "Dr. Daria Pavlova", "Dr. Ketevan Qushitashvili"]
   },
   "bot_behavior": {
