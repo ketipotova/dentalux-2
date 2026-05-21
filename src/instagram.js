@@ -1,4 +1,4 @@
-const { getResponse } = require("./claude");
+const { getResponse } = require("./llm");
 
 async function sendInstagramReply(recipientId, messageText, accessToken) {
   const url = `https://graph.instagram.com/v21.0/me/messages`;

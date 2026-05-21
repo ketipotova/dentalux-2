@@ -1,7 +1,7 @@
 {
   "name": "dentalux-instagram-bot",
   "version": "1.0.0",
-  "description": "Instagram DM chatbot for Dentalux dental clinic powered by Claude",
+  "description": "Instagram DM chatbot for Dentalux dental clinic powered by Gemini (with Claude fallback)",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@google/genai": "^2.5.0",
     "express": "^4.21.0"
   }
 }
