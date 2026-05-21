@@ -1,6 +1,6 @@
 const { GoogleGenAI } = require("@google/genai");
 const Anthropic = require("@anthropic-ai/sdk");
-const { buildSystemPrompt } = require("./knowledge-base");
+const { buildSystemPrompt, buildLiveContext } = require("./knowledge-base");
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -14,8 +14,20 @@ const CLAUDE_MODEL = "claude-opus-4-7";
 // and replies were getting truncated mid-word.
 const MAX_OUTPUT_TOKENS = 4096;
 
-async function callGemini(history, systemPrompt) {
-  const geminiHistory = history.map((turn) => ({
+// Attach the per-call live context to the latest user message so the static
+// system prompt stays byte-stable across requests (a prerequisite for
+// prompt-cache hits on Claude).
+function attachLiveContext(history, liveContext) {
+  return history.map((turn, i, arr) => {
+    const isLastUser = i === arr.length - 1 && turn.role === "user";
+    const text = isLastUser ? `${liveContext}\n\n${turn.text}` : turn.text;
+    return { role: turn.role, text };
+  });
+}
+
+async function callGemini(history, systemPrompt, liveContext) {
+  const augmented = attachLiveContext(history, liveContext);
+  const geminiHistory = augmented.map((turn) => ({
     role: turn.role === "assistant" ? "model" : "user",
     parts: [{ text: turn.text }],
   }));
@@ -35,8 +47,9 @@ async function callGemini(history, systemPrompt) {
   return text;
 }
 
-async function callClaude(history, systemPrompt) {
-  const claudeHistory = history.map((turn) => ({
+async function callClaude(history, systemPrompt, liveContext) {
+  const augmented = attachLiveContext(history, liveContext);
+  const claudeHistory = augmented.map((turn) => ({
     role: turn.role,
     content: turn.text,
   }));
@@ -44,7 +57,16 @@ async function callClaude(history, systemPrompt) {
   const response = await anthropic.messages.create({
     model: CLAUDE_MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
-    system: systemPrompt,
+    // Cache the static system prompt — it now excludes per-call date/time so
+    // the prefix is byte-stable. Reads are ~10% of base input cost and TTFT
+    // drops significantly on repeat turns.
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     messages: claudeHistory,
   });
 
@@ -75,10 +97,11 @@ async function getResponse(userId, userMessage) {
   }
 
   const systemPrompt = buildSystemPrompt();
+  const liveContext = buildLiveContext();
   let reply;
 
   try {
-    reply = await callClaude(history, systemPrompt);
+    reply = await callClaude(history, systemPrompt, liveContext);
   } catch (claudeErr) {
     console.warn(
       `[LLM] Claude failed (${claudeErr.name} status=${claudeErr.status}): ${claudeErr.message}`
@@ -87,7 +110,7 @@ async function getResponse(userId, userMessage) {
       console.warn(`[LLM] Claude error body: ${JSON.stringify(claudeErr.error)}`);
     }
     try {
-      reply = await callGemini(history, systemPrompt);
+      reply = await callGemini(history, systemPrompt, liveContext);
       console.log("[LLM] Gemini fallback succeeded");
     } catch (geminiErr) {
       console.error(

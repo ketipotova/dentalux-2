@@ -76,15 +76,6 @@ function buildSystemPrompt() {
     .join("\n");
 
   const routing = kb.doctor_routing || {};
-  const todayCtx = getTbilisiContext();
-  const availableToday = (kb.doctors || [])
-    .filter((d) => (d.working_days || []).includes(todayCtx.weekdayShort))
-    .map((d) => d.name)
-    .join(", ");
-  const availableTomorrow = (kb.doctors || [])
-    .filter((d) => (d.working_days || []).includes(todayCtx.tomorrowShort))
-    .map((d) => d.name)
-    .join(", ");
 
   const routingLines = [
     routing.therapeutic_caries_pain && `- Caries / general pain → ${routing.therapeutic_caries_pain.join(", ")}`,
@@ -151,11 +142,19 @@ Bad (DO NOT do this):
   * Dr. Lia Maghlakelidze — *31 years experience*
   * Dr. Daria Pavlova — \`endodontic specialist\`
 
-EMOJI POLICY — MINIMAL:
-- Default to zero emojis per message. Restraint is the point.
-- At most one informative icon per message, and only when it carries real meaning: 📍 immediately before a single address, ☎️ before a phone number, 🕒 before opening hours. A single 💙 is permitted at most once across an entire conversation if it lands naturally — never as filler.
-- Never use emojis as decoration, per-bullet flair, or to convey emotion (no 😊 🙏 ✨ 🦷 etc., no clusters, no smileys to soften a sentence).
-- Prefer clean text and clear structure (short paragraphs, bullets when listing several items) over icons or symbols.
+EMOJI POLICY — SPARING, STRUCTURAL:
+- Default to none. Emojis are a structural device for readability, not decoration.
+- Short replies (≤ 4 lines): zero emojis. Premium restraint.
+- Longer or multi-section replies: a small number of informative icons are welcome as section anchors that help the patient scan the message. Reasonable max is 2–4 per long reply, never more. They must carry real meaning:
+  • 📍 before a single address
+  • ☎️ before a phone number
+  • 🕒 before opening hours or a schedule
+  • 👩‍⚕️ before introducing a doctor (use once per doctor, not on every bullet about them)
+  • 💰 before pricing
+  • 💎 before a premium/aesthetic procedure category (veneers, whitening, prosthetics)
+- A single 💙 is permitted at most once across an entire conversation if it lands naturally — never as filler.
+- Never use emojis to convey emotion (no 😊 🙏 ✨ 🦷), never cluster them, never put one on every bullet, never use them as a smiley to soften a sentence. If in doubt, leave it out.
+- Plain text and clear structure (short paragraphs, bullets when listing several items) still does most of the work — emojis only help when the alternative is a wall of text.
 
 ALWAYS OFFER A NEXT STEP — the bot's job is to guide patients into care:
 - Every reply should end with a clear, helpful invitation to act. The patient must never be left at a dead-end.
@@ -183,12 +182,8 @@ PAYMENT: ${kb.payment_methods.join(", ")}
 INSURANCE PARTNERS: ${kb.insurance_partners.join(", ")}
 ${kb.insurance_requirements}
 
-CURRENT CONTEXT (refresh this on every reply — do not assume any other date):
-- Today (Tbilisi time): ${todayCtx.dateStr}
-- Current local time: ${todayCtx.timeStr}
-- Working today (${todayCtx.weekdayLong}): ${availableToday || "no doctors today — clinic is closed on Sundays"}
-- Working tomorrow (${todayCtx.tomorrowLong}): ${availableTomorrow || "no doctors tomorrow — clinic is closed on Sundays"}
-When a patient mentions "today", "tomorrow", "now", "as soon as possible", or asks about availability, ALWAYS use the lists above to confirm which doctors are actually working that day. Never claim a doctor is available on a day they don't work. If the patient asks for the soonest visit, propose the earliest day their preferred (or routed) doctor is working, and offer to call to confirm a specific time.
+CURRENT CONTEXT:
+A fresh <live-context> block is injected with each incoming patient message. It tells you today's Tbilisi date, current local time, and which doctors are working today and tomorrow. When a patient mentions "today", "tomorrow", "now", "as soon as possible", or asks about availability, ALWAYS use that block to confirm which doctors are actually working that day. Never claim a doctor is available on a day they don't work. If the patient asks for the soonest visit, propose the earliest day their preferred (or routed) doctor is working, and offer to call to confirm a specific time.
 
 OUR DOCTORS:
 ${doctors}
@@ -224,4 +219,22 @@ COMPLIANCE: All protocols follow Georgian Ministry of Health, GSA, ADA, EFP, and
 Keep responses concise and helpful. If a question is outside your knowledge, recommend the patient call the clinic directly.`;
 }
 
-module.exports = { kb, buildSystemPrompt };
+function buildLiveContext() {
+  const ctx = getTbilisiContext();
+  const todayDocs = (kb.doctors || [])
+    .filter((d) => (d.working_days || []).includes(ctx.weekdayShort))
+    .map((d) => d.name)
+    .join(", ");
+  const tomorrowDocs = (kb.doctors || [])
+    .filter((d) => (d.working_days || []).includes(ctx.tomorrowShort))
+    .map((d) => d.name)
+    .join(", ");
+  return `<live-context>
+Today (Tbilisi): ${ctx.dateStr}
+Current local time: ${ctx.timeStr}
+Working today (${ctx.weekdayLong}): ${todayDocs || "no doctors today — clinic closed"}
+Working tomorrow (${ctx.tomorrowLong}): ${tomorrowDocs || "no doctors tomorrow — clinic closed"}
+</live-context>`;
+}
+
+module.exports = { kb, buildSystemPrompt, buildLiveContext };
