@@ -48,8 +48,17 @@ async function callClaude(history, systemPrompt) {
     messages: claudeHistory,
   });
 
-  const text = response.content[0]?.text;
-  if (!text) throw new Error("Claude returned empty response");
+  // Find the first text block — defensive in case the API ever returns a
+  // non-text block first (thinking, tool_use, etc.).
+  const textBlock = response.content?.find((b) => b.type === "text");
+  const text = textBlock?.text;
+  if (!text) {
+    const shape = JSON.stringify({
+      stop_reason: response.stop_reason,
+      content_types: response.content?.map((b) => b.type),
+    });
+    throw new Error(`Claude returned no text block: ${shape}`);
+  }
   return text;
 }
 
@@ -72,8 +81,11 @@ async function getResponse(userId, userMessage) {
     reply = await callClaude(history, systemPrompt);
   } catch (claudeErr) {
     console.warn(
-      `[LLM] Claude failed, falling back to Gemini: ${claudeErr.message}`
+      `[LLM] Claude failed (${claudeErr.name} status=${claudeErr.status}): ${claudeErr.message}`
     );
+    if (claudeErr.error) {
+      console.warn(`[LLM] Claude error body: ${JSON.stringify(claudeErr.error)}`);
+    }
     try {
       reply = await callGemini(history, systemPrompt);
       console.log("[LLM] Gemini fallback succeeded");
