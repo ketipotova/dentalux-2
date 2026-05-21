@@ -69,20 +69,20 @@ async function getResponse(userId, userMessage) {
   let reply;
 
   try {
-    reply = await callGemini(history, systemPrompt);
-  } catch (geminiErr) {
+    reply = await callClaude(history, systemPrompt);
+  } catch (claudeErr) {
     console.warn(
-      `[LLM] Gemini failed, falling back to Claude: ${geminiErr.message}`
+      `[LLM] Claude failed, falling back to Gemini: ${claudeErr.message}`
     );
     try {
-      reply = await callClaude(history, systemPrompt);
-      console.log("[LLM] Claude fallback succeeded");
-    } catch (claudeErr) {
+      reply = await callGemini(history, systemPrompt);
+      console.log("[LLM] Gemini fallback succeeded");
+    } catch (geminiErr) {
       console.error(
-        `[LLM] Both providers failed. Gemini: ${geminiErr.message}. Claude: ${claudeErr.message}`
+        `[LLM] Both providers failed. Claude: ${claudeErr.message}. Gemini: ${geminiErr.message}`
       );
       history.pop();
-      throw new Error("Both Gemini and Claude failed to respond");
+      throw new Error("Both Claude and Gemini failed to respond");
     }
   }
 
