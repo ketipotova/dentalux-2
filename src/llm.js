@@ -9,7 +9,7 @@ const conversationHistory = new Map();
 const MAX_HISTORY = 20;
 
 const GEMINI_MODEL = "gemini-3.5-flash";
-const CLAUDE_MODEL = "claude-opus-4-8";
+const CLAUDE_MODEL = "claude-opus-4-7";
 // Georgian tokenizes at ~6–12 tokens per character, so 1k is far too tight
 // and replies were getting truncated mid-word.
 const MAX_OUTPUT_TOKENS = 4096;
