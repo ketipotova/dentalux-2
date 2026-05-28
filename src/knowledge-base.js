@@ -1,9 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-
-const kb = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "..", "knowledge-base.json"), "utf-8")
-);
+const kbStore = require("./kb-store");
 
 const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_LONG = {
@@ -49,6 +44,7 @@ function getTbilisiContext() {
 }
 
 function buildSystemPrompt() {
+  const kb = kbStore.load();
   const services = kb.services
     .map((s) => {
       let line = `- ${s.name}: ${s.price_from_gel} GEL-დან`;
@@ -255,6 +251,7 @@ Keep responses concise and helpful. If a question is outside your knowledge, rec
 }
 
 function buildLiveContext() {
+  const kb = kbStore.load();
   const ctx = getTbilisiContext();
   const todayDocs = (kb.doctors || [])
     .filter((d) => (d.working_days || []).includes(ctx.weekdayShort))
@@ -272,4 +269,4 @@ Working tomorrow (${ctx.tomorrowLong}): ${tomorrowDocs || "no doctors tomorrow �
 </live-context>`;
 }
 
-module.exports = { kb, buildSystemPrompt, buildLiveContext };
+module.exports = { buildSystemPrompt, buildLiveContext };

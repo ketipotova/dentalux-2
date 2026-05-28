@@ -1,10 +1,12 @@
 const express = require("express");
 const path = require("path");
 const { handleMessage } = require("./instagram");
+const adminPanel = require("./admin");
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
+app.use("/admin", adminPanel.buildRouter());
 
 const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
