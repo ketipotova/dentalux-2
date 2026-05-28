@@ -72,6 +72,14 @@ const T = {
   count_insurance: "დაზღვევის პარტნიორი",
   manage: "მართვა →",
   search_placeholder: "ძებნა სახელით ან სპეციალობით…",
+  section_essentials: "ძირითადი ინფორმაცია",
+  section_profile: "სრული პროფილი",
+  section_bio: "ბიოგრაფია და კვალიფიკაცია",
+  section_hint: "არასავალდებულო — დააჭირეთ გასახსნელად",
+  inline_error: "გთხოვთ შეავსოთ აუცილებელი ველები (მონიშნულია *).",
+  today_title: "დღეს მუშაობენ",
+  today_none: "დღეს ექიმები არ მუშაობენ — კვირას კლინიკა დაკეტილია.",
+  overview_title: "მიმოხილვა",
 
   btn_add: "დამატება",
   btn_save: "შენახვა",
@@ -370,6 +378,42 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   .row-form .btn{width:100%}
 }
 @media (min-width:821px){ .sidebar{transform:none!important} }
+
+/* Two-column field rows (collapse on mobile) */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.field label{margin-top:16px}
+.req{color:var(--danger);margin-left:3px;font-weight:700}
+@media (max-width:620px){ .grid2{grid-template-columns:1fr} }
+
+/* Collapsible form sections (progressive disclosure) */
+details.section{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);margin:0 0 18px;overflow:hidden}
+details.section>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:12px;font-weight:650;color:var(--ink);font-size:15px}
+details.section>summary::-webkit-details-marker{display:none}
+details.section>summary:hover{background:var(--surface-2)}
+details.section>summary .sub{font-weight:500;color:var(--muted);font-size:12.5px}
+details.section>summary .chev{margin-left:auto;width:18px;height:18px;color:var(--muted);transition:transform .15s}
+details.section[open]>summary .chev{transform:rotate(90deg)}
+.section-body{padding:4px 20px 20px}
+.section-body label:first-child{margin-top:6px}
+
+/* Sticky save/cancel bar on forms */
+.form-actions{position:sticky;bottom:0;z-index:10;display:flex;gap:10px;flex-wrap:wrap;margin:6px -28px 0;padding:14px 28px;background:linear-gradient(to top,var(--bg) 72%,transparent);border-top:1px solid var(--line)}
+@media (max-width:820px){ .form-actions{margin:6px -16px 0;padding:14px 16px} .form-actions .btn{flex:1} }
+
+/* Inline error banner inside a form */
+.inline-error{display:flex;align-items:center;gap:9px;background:var(--danger-bg);color:var(--danger-fg);border:1px solid #E6CFC7;border-radius:var(--radius-sm);padding:12px 15px;margin-bottom:18px;font-size:14px;font-weight:600}
+.inline-error svg{width:18px;height:18px;flex:none}
+
+/* Dashboard: quick actions, today roster */
+.quick{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:8px}
+.panel-head{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.panel-head h2{margin:0;color:var(--ink);text-transform:none;letter-spacing:0;font-size:16px;font-weight:680}
+.panel-head .when{color:var(--accent-d);font-weight:650;font-size:13px}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;margin-top:12px}
+.ritem{display:flex;flex-direction:column;gap:2px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.rname{font-weight:650;font-size:14px}
+.rspec{font-size:12.5px;color:var(--muted)}
 `;
 
 // --- Layout ---
@@ -460,7 +504,33 @@ ${toast}
 
 // --- Page renderers ---
 
+// Current weekday in Tbilisi as a short code (Sun..Sat), matching DAYS codes.
+function tbilisiWeekdayCode() {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tbilisi",
+    weekday: "short",
+  }).format(new Date());
+}
+// Full Georgian weekday name for the dashboard header.
+const WEEKDAY_KA = {
+  Sun: "კვირა", Mon: "ორშაბათი", Tue: "სამშაბათი", Wed: "ოთხშაბათი",
+  Thu: "ხუთშაბათი", Fri: "პარასკევი", Sat: "შაბათი",
+};
+
 function renderDashboard(req, kb) {
+  const today = tbilisiWeekdayCode();
+  const working = (kb.doctors || []).filter((d) =>
+    (d.working_days || []).includes(today)
+  );
+  const roster = working.length
+    ? `<div class="roster">${working
+        .map(
+          (d) =>
+            `<div class="ritem"><span class="rname">${esc(d.name || "")}</span><span class="rspec">${esc(d.specialty || "")}</span></div>`
+        )
+        .join("")}</div>`
+    : `<p class="muted" style="margin:10px 0 0">${esc(T.today_none)}</p>`;
+
   const cards = [
     { count: (kb.doctors || []).length, label: T.count_doctors, href: "/admin/doctors" },
     { count: (kb.services || []).length, label: T.count_services, href: "/admin/services" },
@@ -471,7 +541,18 @@ function renderDashboard(req, kb) {
         `<div class="card"><a href="${c.href}"><div class="label">${esc(c.label)}</div><div class="count">${c.count}</div><div class="muted">${esc(T.manage)}</div></a></div>`
     )
     .join("");
-  const body = `<div class="cards">${cards}</div>`;
+
+  const body = `
+<div class="quick">
+  <a class="btn" href="/admin/doctors/new">${esc(T.doctor_add_button)}</a>
+  <a class="btn secondary" href="/admin/services/new">${esc(T.service_add_button)}</a>
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>${esc(T.today_title)}</h2><span class="when">${esc(WEEKDAY_KA[today] || today)}</span></div>
+  ${roster}
+</div>
+<h2>${esc(T.overview_title)}</h2>
+<div class="cards">${cards}</div>`;
   return layout(req, T.nav_dashboard, body, { subtitle: T.dashboard_subtitle });
 }
 
@@ -513,7 +594,10 @@ function csvToLine(arr) {
   return arr.join(", ");
 }
 
-function renderDoctorForm(req, doctor, isNew) {
+const ICON_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
+const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 16.5v.5"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+
+function renderDoctorForm(req, doctor, isNew, errorMsg) {
   const wd = new Set(doctor.working_days || []);
   const dayChecks = DAYS.map(
     (d) =>
@@ -521,58 +605,84 @@ function renderDoctorForm(req, doctor, isNew) {
   ).join("");
   const action = isNew ? "/admin/doctors" : `/admin/doctors/${esc(doctor.id)}`;
   const title = isNew ? T.doctor_add_title : T.doctor_edit_title(doctor.name || "");
+  const errBanner = errorMsg
+    ? `<div class="inline-error">${ICON_WARN}<span>${esc(errorMsg)}</span></div>`
+    : "";
+  // If the user is re-shown the form after an error, keep optional sections
+  // open only if they already contain data, so nothing they typed is hidden.
+  const profileHasData = !!(
+    doctor.name_variants || doctor.level || doctor.experience_years ||
+    doctor.at_dentalux_since || doctor.branch || doctor.languages ||
+    doctor.focus || doctor.tools || doctor.services
+  );
+  const bioHasData = !!(
+    doctor.education || doctor.key_certifications || doctor.key_seminars ||
+    doctor.recent_training_2024 || doctor.philosophy_ka || doctor.philosophy_en || doctor.notes
+  );
   const body = `<form method="post" action="${action}">
-<fieldset><legend>${esc(T.legend_core)}</legend>
-  <label>${esc(T.label_name_en)}</label>
-  <input type="text" name="name" required value="${esc(doctor.name)}">
-  <label>${esc(T.label_name_ka)}</label>
-  <input type="text" name="name_ka" value="${esc(doctor.name_ka)}">
-  <label>${esc(T.label_name_variants)}</label>
-  <input type="text" name="name_variants" value="${esc(csvToLine(doctor.name_variants))}">
-  <label>${esc(T.label_specialty)}</label>
+${errBanner}
+<fieldset><legend>${esc(T.section_essentials)}</legend>
+  <div class="grid2">
+    <div class="field"><label>${esc(T.label_name_en)}<span class="req">*</span></label>
+      <input type="text" name="name" required value="${esc(doctor.name)}"></div>
+    <div class="field"><label>${esc(T.label_name_ka)}</label>
+      <input type="text" name="name_ka" value="${esc(doctor.name_ka)}"></div>
+  </div>
+  <label>${esc(T.label_specialty)}<span class="req">*</span></label>
   <input type="text" name="specialty" required value="${esc(doctor.specialty)}">
-  <label>${esc(T.label_level)}</label>
-  <input type="text" name="level" value="${esc(doctor.level)}">
-  <label>${esc(T.label_experience_years)}</label>
-  <input type="number" name="experience_years" min="0" value="${esc(doctor.experience_years)}">
-  <label>${esc(T.label_at_dentalux_since)}</label>
-  <input type="number" name="at_dentalux_since" min="1900" max="2100" value="${esc(doctor.at_dentalux_since)}">
-</fieldset>
-<fieldset><legend>${esc(T.legend_schedule)}</legend>
   <label>${esc(T.label_working_days)}</label>
   <div class="checkboxes">${dayChecks}</div>
   <label>${esc(T.label_schedule_note)}</label>
   <input type="text" name="schedule" value="${esc(doctor.schedule)}" placeholder="${esc(T.label_schedule_hint)}">
-  <label>${esc(T.label_branch)}</label>
-  <input type="text" name="branch" value="${esc(doctor.branch)}">
 </fieldset>
-<fieldset><legend>${esc(T.legend_profile)}</legend>
-  <label>${esc(T.label_languages)}</label>
-  <input type="text" name="languages" value="${esc(csvToLine(doctor.languages))}" placeholder="Georgian, English, Russian">
-  <label>${esc(T.label_focus)}</label>
-  <input type="text" name="focus" value="${esc(csvToLine(doctor.focus))}">
-  <label>${esc(T.label_tools)}</label>
-  <input type="text" name="tools" value="${esc(csvToLine(doctor.tools))}">
-  <label>${esc(T.label_services_list)}</label>
-  <textarea name="services">${esc(arrToLines(doctor.services))}</textarea>
-</fieldset>
-<fieldset><legend>${esc(T.legend_text)}</legend>
-  <label>${esc(T.label_education)}</label>
-  <textarea name="education">${esc(arrToLines(doctor.education))}</textarea>
-  <label>${esc(T.label_certifications)}</label>
-  <textarea name="key_certifications">${esc(arrToLines(doctor.key_certifications))}</textarea>
-  <label>${esc(T.label_seminars)}</label>
-  <textarea name="key_seminars">${esc(arrToLines(doctor.key_seminars))}</textarea>
-  <label>${esc(T.label_recent_training)}</label>
-  <textarea name="recent_training_2024">${esc(arrToLines(doctor.recent_training_2024))}</textarea>
-  <label>${esc(T.label_philosophy_ka)}</label>
-  <textarea name="philosophy_ka">${esc(doctor.philosophy_ka)}</textarea>
-  <label>${esc(T.label_philosophy_en)}</label>
-  <textarea name="philosophy_en">${esc(doctor.philosophy_en)}</textarea>
-  <label>${esc(T.label_notes)}</label>
-  <textarea name="notes">${esc(doctor.notes)}</textarea>
-</fieldset>
-<div class="btn-row">
+
+<details class="section"${profileHasData ? " open" : ""}>
+  <summary>${esc(T.section_profile)} <span class="sub">${esc(T.section_hint)}</span>${ICON_CHEV}</summary>
+  <div class="section-body">
+    <div class="grid2">
+      <div class="field"><label>${esc(T.label_level)}</label>
+        <input type="text" name="level" value="${esc(doctor.level)}"></div>
+      <div class="field"><label>${esc(T.label_branch)}</label>
+        <input type="text" name="branch" value="${esc(doctor.branch)}"></div>
+      <div class="field"><label>${esc(T.label_experience_years)}</label>
+        <input type="number" name="experience_years" min="0" value="${esc(doctor.experience_years)}"></div>
+      <div class="field"><label>${esc(T.label_at_dentalux_since)}</label>
+        <input type="number" name="at_dentalux_since" min="1900" max="2100" value="${esc(doctor.at_dentalux_since)}"></div>
+    </div>
+    <label>${esc(T.label_name_variants)}</label>
+    <input type="text" name="name_variants" value="${esc(csvToLine(doctor.name_variants))}">
+    <label>${esc(T.label_languages)}</label>
+    <input type="text" name="languages" value="${esc(csvToLine(doctor.languages))}" placeholder="Georgian, English, Russian">
+    <label>${esc(T.label_focus)}</label>
+    <input type="text" name="focus" value="${esc(csvToLine(doctor.focus))}">
+    <label>${esc(T.label_tools)}</label>
+    <input type="text" name="tools" value="${esc(csvToLine(doctor.tools))}">
+    <label>${esc(T.label_services_list)}</label>
+    <textarea name="services">${esc(arrToLines(doctor.services))}</textarea>
+  </div>
+</details>
+
+<details class="section"${bioHasData ? " open" : ""}>
+  <summary>${esc(T.section_bio)} <span class="sub">${esc(T.section_hint)}</span>${ICON_CHEV}</summary>
+  <div class="section-body">
+    <label>${esc(T.label_education)}</label>
+    <textarea name="education">${esc(arrToLines(doctor.education))}</textarea>
+    <label>${esc(T.label_certifications)}</label>
+    <textarea name="key_certifications">${esc(arrToLines(doctor.key_certifications))}</textarea>
+    <label>${esc(T.label_seminars)}</label>
+    <textarea name="key_seminars">${esc(arrToLines(doctor.key_seminars))}</textarea>
+    <label>${esc(T.label_recent_training)}</label>
+    <textarea name="recent_training_2024">${esc(arrToLines(doctor.recent_training_2024))}</textarea>
+    <label>${esc(T.label_philosophy_ka)}</label>
+    <textarea name="philosophy_ka">${esc(doctor.philosophy_ka)}</textarea>
+    <label>${esc(T.label_philosophy_en)}</label>
+    <textarea name="philosophy_en">${esc(doctor.philosophy_en)}</textarea>
+    <label>${esc(T.label_notes)}</label>
+    <textarea name="notes">${esc(doctor.notes)}</textarea>
+  </div>
+</details>
+
+<div class="form-actions">
   <button class="btn" type="submit">${isNew ? esc(T.btn_create) : esc(T.btn_save)}</button>
   <a class="btn secondary" href="/admin/doctors">${esc(T.btn_cancel)}</a>
 </div>
@@ -604,12 +714,16 @@ function renderServicesList(req, services) {
   return layout(req, T.services_title, body);
 }
 
-function renderServiceForm(req, service, isNew) {
+function renderServiceForm(req, service, isNew, errorMsg) {
   const action = isNew ? "/admin/services" : `/admin/services/${esc(service.id)}`;
   const title = isNew ? T.service_add_title : T.service_edit_title;
+  const errBanner = errorMsg
+    ? `<div class="inline-error">${ICON_WARN}<span>${esc(errorMsg)}</span></div>`
+    : "";
   const body = `<form method="post" action="${action}">
+${errBanner}
 <fieldset><legend>${esc(T.legend_service)}</legend>
-  <label>${esc(T.label_service_name)}</label>
+  <label>${esc(T.label_service_name)}<span class="req">*</span></label>
   <input type="text" name="name" required value="${esc(service.name)}">
   <label>${esc(T.label_price_from)}</label>
   <input type="number" name="price_from_gel" min="0" value="${esc(service.price_from_gel)}">
@@ -618,7 +732,7 @@ function renderServiceForm(req, service, isNew) {
   <label>${esc(T.label_note)}</label>
   <input type="text" name="note" value="${esc(service.note)}">
 </fieldset>
-<div class="btn-row">
+<div class="form-actions">
   <button class="btn" type="submit">${isNew ? esc(T.btn_create) : esc(T.btn_save)}</button>
   <a class="btn secondary" href="/admin/services">${esc(T.btn_cancel)}</a>
 </div>
@@ -850,7 +964,8 @@ function buildRouter() {
   router.post("/doctors", (req, res) => {
     const doctor = mergeDoctorFromBody({}, req.body);
     if (!doctor.name || !doctor.specialty) {
-      return res.redirect(`/admin/doctors/new?error=${encodeURIComponent(T.required + ": " + T.label_name_en + " / " + T.label_specialty)}`);
+      // Re-render with the submitted values so nothing typed is lost.
+      return res.status(400).send(renderDoctorForm(req, doctor, true, T.inline_error));
     }
     const kb = kbStore.load();
     if (!Array.isArray(kb.doctors)) kb.doctors = [];
@@ -870,10 +985,11 @@ function buildRouter() {
     const idx = (kb.doctors || []).findIndex((d) => d.id === req.params.id);
     if (idx < 0) return res.redirect("/admin/doctors?error=" + encodeURIComponent(T.not_found));
     const merged = mergeDoctorFromBody(kb.doctors[idx], req.body);
-    if (!merged.name || !merged.specialty) {
-      return res.redirect(`/admin/doctors/${req.params.id}/edit?error=${encodeURIComponent(T.required + ": " + T.label_name_en + " / " + T.label_specialty)}`);
-    }
     merged.id = req.params.id;
+    if (!merged.name || !merged.specialty) {
+      // Re-render with the submitted values so nothing typed is lost.
+      return res.status(400).send(renderDoctorForm(req, merged, false, T.inline_error));
+    }
     kb.doctors[idx] = merged;
     kbStore.save(kb);
     res.redirect(`/admin/doctors?flash=${encodeURIComponent(T.saved + ": " + merged.name)}`);
@@ -896,7 +1012,7 @@ function buildRouter() {
   });
   router.post("/services", (req, res) => {
     const service = parseServiceFromBody(req.body);
-    if (!service.name) return res.redirect("/admin/services/new?error=" + encodeURIComponent(T.required + ": " + T.label_service_name));
+    if (!service.name) return res.status(400).send(renderServiceForm(req, service, true, T.inline_error));
     const kb = kbStore.load();
     if (!Array.isArray(kb.services)) kb.services = [];
     service.id = crypto.randomUUID();
@@ -915,8 +1031,8 @@ function buildRouter() {
     const idx = (kb.services || []).findIndex((s) => s.id === req.params.id);
     if (idx < 0) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
     const parsed = parseServiceFromBody(req.body);
-    if (!parsed.name) return res.redirect(`/admin/services/${req.params.id}/edit?error=${encodeURIComponent(T.required + ": " + T.label_service_name)}`);
     parsed.id = req.params.id;
+    if (!parsed.name) return res.status(400).send(renderServiceForm(req, parsed, false, T.inline_error));
     kb.services[idx] = parsed;
     kbStore.save(kb);
     res.redirect(`/admin/services?flash=${encodeURIComponent(T.saved + ": " + parsed.name)}`);
