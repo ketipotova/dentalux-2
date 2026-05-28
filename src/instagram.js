@@ -1,4 +1,5 @@
 const { getResponse } = require("./llm");
+const stats = require("./stats");
 
 async function sendInstagramReply(recipientId, messageText, accessToken) {
   const url = `https://graph.instagram.com/v21.0/me/messages`;
@@ -18,6 +19,7 @@ async function sendInstagramReply(recipientId, messageText, accessToken) {
   if (!res.ok) {
     const error = await res.text();
     console.error("Instagram API error:", error);
+    stats.recordIgFailure();
     throw new Error(`Instagram send failed: ${res.status}`);
   }
 

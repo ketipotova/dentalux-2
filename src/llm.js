@@ -1,6 +1,7 @@
 const { GoogleGenAI } = require("@google/genai");
 const Anthropic = require("@anthropic-ai/sdk");
 const { buildSystemPrompt, buildLiveContext } = require("./knowledge-base");
+const stats = require("./stats");
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -90,9 +91,11 @@ async function getResponse(userId, userMessage) {
   const systemPrompt = buildSystemPrompt();
   const liveContext = buildLiveContext();
   let reply;
+  let provider = null;
 
   try {
     reply = await callClaude(history, systemPrompt, liveContext);
+    provider = "claude";
   } catch (claudeErr) {
     console.warn(
       `[LLM] Claude failed (${claudeErr.name} status=${claudeErr.status}): ${claudeErr.message}`
@@ -102,17 +105,20 @@ async function getResponse(userId, userMessage) {
     }
     try {
       reply = await callGemini(history, systemPrompt, liveContext);
+      provider = "gemini";
       console.log("[LLM] Gemini fallback succeeded");
     } catch (geminiErr) {
       console.error(
         `[LLM] Both providers failed. Claude: ${claudeErr.message}. Gemini: ${geminiErr.message}`
       );
       history.pop();
+      stats.recordMessage(userId, null); // both providers failed
       throw new Error("Both Claude and Gemini failed to respond");
     }
   }
 
   history.push({ role: "assistant", text: reply });
+  stats.recordMessage(userId, provider);
   return reply;
 }
 

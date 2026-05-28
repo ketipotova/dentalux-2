@@ -1,6 +1,7 @@
 const express = require("express");
 const crypto = require("crypto");
 const kbStore = require("./kb-store");
+const stats = require("./stats");
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -64,6 +65,7 @@ const T = {
   nav_clinic: "კლინიკა",
   nav_routing: "ექიმის შერჩევა",
   nav_payment: "გადახდის მეთოდები",
+  nav_stats: "სტატისტიკა",
 
   dashboard_subtitle:
     "ცოცხალი ცოდნის ბაზა. აქ შესრულებული ცვლილებები მაშინვე აისახება ბოტში.",
@@ -80,6 +82,25 @@ const T = {
   today_title: "დღეს მუშაობენ",
   today_none: "დღეს ექიმები არ მუშაობენ — კვირას კლინიკა დაკეტილია.",
   overview_title: "მიმოხილვა",
+
+  stats_title: "სტატისტიკა",
+  stats_total: "სულ შეტყობინება",
+  stats_unique: "უნიკალური მომხმარებელი",
+  stats_today: "დღეს",
+  stats_active_today: "აქტიური დღეს",
+  stats_last7: "ბოლო 7 დღე",
+  stats_provider: "AI პროვაიდერი",
+  stats_claude: "Claude (ძირითადი)",
+  stats_gemini: "Gemini (სარეზერვო)",
+  stats_failures: "წარუმატებელი პასუხი",
+  stats_ig_fail: "Instagram-ზე გაგზავნის შეცდომა",
+  stats_daily: "შეტყობინებები — ბოლო 14 დღე",
+  stats_recent: "ბოლო აქტივობა",
+  stats_recent_msg: "შეტყობინება",
+  stats_recent_fail: "გაგზავნის შეცდომა",
+  stats_since: "აღრიცხვა დაიწყო",
+  stats_empty: "მონაცემები ჯერ არ არის.",
+  stats_not_persistent: "⚠ /data ვოლუმი არ არის მიერთებული — სტატისტიკა გადატვირთვისას იშლება.",
 
   btn_add: "დამატება",
   btn_save: "შენახვა",
@@ -223,6 +244,7 @@ const NAV = [
   { path: "clinic", label: T.nav_clinic },
   { path: "routing", label: T.nav_routing },
   { path: "payment", label: T.nav_payment },
+  { path: "stats", label: T.nav_stats },
 ];
 
 const CSS = `
@@ -415,6 +437,29 @@ details.section[open]>summary .chev{transform:rotate(90deg)}
 .ritem{display:flex;flex-direction:column;gap:2px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
 .rname{font-weight:650;font-size:14px}
 .rspec{font-size:12.5px;color:var(--muted)}
+
+/* Stats */
+.bars{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.bar{display:grid;grid-template-columns:78px 1fr 34px;align-items:center;gap:10px;font-size:12.5px}
+.bar .d{color:var(--muted)}
+.bar .track{background:var(--surface-2);border-radius:6px;height:18px;overflow:hidden}
+.bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-d));border-radius:6px;min-width:2px}
+.bar .v{text-align:right;font-weight:650;color:var(--ink)}
+.provmix{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:12px 0 14px;background:var(--surface-2)}
+.provmix span{display:block;height:100%}
+.provmix .c{background:var(--accent)}
+.provmix .g{background:#C9A86A}
+.provmix .f{background:var(--danger)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.feed{display:flex;flex-direction:column;gap:0;margin-top:10px}
+.feed .ev{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.feed .ev:last-child{border-bottom:none}
+.feed .when{color:var(--muted);font-size:12px;margin-left:auto}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:999px}
+.tag.c{background:var(--accent-tint);color:var(--accent-d)}
+.tag.g{background:#F1E7D2;color:#8A6A2E}
+.tag.f{background:var(--danger-bg);color:var(--danger-fg)}
 `;
 
 // --- Layout ---
@@ -428,6 +473,7 @@ const ICONS = {
   clinic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M12 8v4M10 10h4"/></svg>',
   routing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.3 6.7l7.4 4M8.3 17.3l7.4-4"/></svg>',
   payment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>',
+  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>',
 };
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>';
 const ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
@@ -946,6 +992,93 @@ function parseServiceFromBody(body) {
   return service;
 }
 
+function renderStats(req) {
+  const s = stats.summary();
+  const warn = s.persistent
+    ? ""
+    : `<div class="inline-error">${ICON_WARN}<span>${esc(T.stats_not_persistent)}</span></div>`;
+
+  const stat = (label, value) =>
+    `<div class="card"><div class="label">${esc(label)}</div><div class="count">${value}</div></div>`;
+  const cards = [
+    stat(T.stats_total, s.totals.messages),
+    stat(T.stats_unique, s.uniqueUsers),
+    stat(T.stats_today, s.messagesToday),
+    stat(T.stats_active_today, s.activeToday),
+    stat(T.stats_last7, s.last7),
+  ].join("");
+
+  // Provider mix bar
+  const answered = s.totals.claude + s.totals.gemini + s.totals.failures;
+  const pct = (n) => (answered ? Math.round((n / answered) * 100) : 0);
+  const mix = answered
+    ? `<div class="provmix">
+        <span class="c" style="width:${pct(s.totals.claude)}%"></span>
+        <span class="g" style="width:${pct(s.totals.gemini)}%"></span>
+        <span class="f" style="width:${pct(s.totals.failures)}%"></span>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>${esc(T.stats_claude)} — ${s.totals.claude} (${pct(s.totals.claude)}%)</span>
+        <span><i style="background:#C9A86A"></i>${esc(T.stats_gemini)} — ${s.totals.gemini} (${pct(s.totals.gemini)}%)</span>
+        <span><i style="background:var(--danger)"></i>${esc(T.stats_failures)} — ${s.totals.failures}</span>
+      </div>
+      <p class="muted" style="margin-top:12px">${esc(T.stats_ig_fail)}: ${s.totals.ig_send_failures}</p>`
+    : `<p class="muted">${esc(T.stats_empty)}</p>`;
+
+  // Daily bar chart (last 14 days)
+  const maxDay = Math.max(1, ...s.days.map((d) => d.count));
+  const bars = s.days
+    .map(
+      (d) =>
+        `<div class="bar"><span class="d">${esc(d.day.slice(5))}</span><span class="track"><span class="fill" style="width:${Math.round((d.count / maxDay) * 100)}%"></span></span><span class="v">${d.count}</span></div>`
+    )
+    .join("");
+
+  // Recent activity feed
+  const fmtTime = (iso) => {
+    try {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Tbilisi",
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(iso));
+    } catch {
+      return "";
+    }
+  };
+  const feed = s.recent.length
+    ? `<div class="feed">${s.recent
+        .map((e) => {
+          let tag;
+          if (e.type === "ig_send_failure") tag = `<span class="tag f">${esc(T.stats_recent_fail)}</span>`;
+          else if (e.provider === "claude") tag = `<span class="tag c">Claude</span>`;
+          else if (e.provider === "gemini") tag = `<span class="tag g">Gemini</span>`;
+          else tag = `<span class="tag f">${esc(T.stats_failures)}</span>`;
+          const what = e.type === "ig_send_failure" ? T.stats_recent_fail : T.stats_recent_msg;
+          return `<div class="ev">${tag}<span>${esc(what)}</span><span class="when">${esc(fmtTime(e.ts))}</span></div>`;
+        })
+        .join("")}</div>`
+    : `<p class="muted">${esc(T.stats_empty)}</p>`;
+
+  const sinceTxt = s.since
+    ? `<p class="muted" style="margin-top:6px">${esc(T.stats_since)}: ${esc(fmtTime(s.since))}</p>`
+    : "";
+
+  const body = `
+${warn}
+<div class="cards">${cards}</div>
+<h2>${esc(T.stats_provider)}</h2>
+${mix}
+<h2>${esc(T.stats_daily)}</h2>
+<div class="table-wrap" style="padding:16px 18px">${s.days.some((d) => d.count) ? `<div class="bars">${bars}</div>` : `<p class="muted">${esc(T.stats_empty)}</p>`}</div>
+<h2>${esc(T.stats_recent)}</h2>
+${feed}
+${sinceTxt}`;
+  return layout(req, T.stats_title, body);
+}
+
 // --- Router ---
 
 function buildRouter() {
@@ -955,6 +1088,10 @@ function buildRouter() {
 
   router.get("/", (req, res) => {
     res.send(renderDashboard(req, kbStore.load()));
+  });
+
+  router.get("/stats", (req, res) => {
+    res.send(renderStats(req));
   });
 
   // Doctors
