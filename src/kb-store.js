@@ -18,13 +18,13 @@ function resolveActivePath() {
     if (!fs.existsSync(VOLUME_PATH)) {
       const seed = fs.readFileSync(SEED_PATH, "utf8");
       fs.writeFileSync(VOLUME_PATH, seed);
-      console.log(`[kb-store] Seeded ${VOLUME_PATH} from ${SEED_PATH}`);
+      console.error(`[kb-store] Seeded ${VOLUME_PATH} from ${SEED_PATH}`);
     }
     activePathCache = VOLUME_PATH;
   } catch {
     activePathCache = SEED_PATH;
     localDevMode = true;
-    console.log(`[kb-store] Volume ${VOLUME_DIR} not writable, using ${SEED_PATH} (local-dev mode)`);
+    console.error(`[kb-store] Volume ${VOLUME_DIR} not writable, using ${SEED_PATH} (local-dev mode)`);
   }
   return activePathCache;
 }
