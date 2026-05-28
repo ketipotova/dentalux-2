@@ -165,6 +165,7 @@ const T = {
   legend_contact: "კონტაქტი",
   legend_hours: "სამუშაო საათები",
   label_address: "მისამართი",
+  label_phones: "ტელეფონები (გამოყავით მძიმეებით)",
   label_website: "ვებსაიტი",
   label_email: "ელფოსტა",
   label_founded: "დაარსების წელი",
@@ -788,6 +789,8 @@ function renderClinicForm(req, clinic) {
 <fieldset><legend>${esc(T.legend_contact)}</legend>
   <label>${esc(T.label_address)}</label>
   <input type="text" name="address" value="${esc(clinic.address)}">
+  <label>${esc(T.label_phones)}</label>
+  <input type="text" name="phones" value="${esc((clinic.phones || []).join(", "))}" placeholder="+995 514 22 10 10, 0322 11 02 06">
   <label>${esc(T.label_website)}</label>
   <input type="text" name="website" value="${esc(clinic.website)}">
   <label>${esc(T.label_email)}</label>
@@ -1108,6 +1111,12 @@ function buildRouter() {
     const kb = kbStore.load();
     const c = kb.clinic || {};
     if (req.body.address !== undefined) c.address = String(req.body.address).trim();
+    if (req.body.phones !== undefined) {
+      c.phones = String(req.body.phones)
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+    }
     if (req.body.website !== undefined) c.website = String(req.body.website).trim();
     if (req.body.email !== undefined) c.email = String(req.body.email).trim();
     const founded = parseInt(req.body.founded, 10);
