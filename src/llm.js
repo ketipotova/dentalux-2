@@ -57,16 +57,7 @@ async function callClaude(history, systemPrompt, liveContext) {
   const response = await anthropic.messages.create({
     model: CLAUDE_MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
-    // Cache the static system prompt — it now excludes per-call date/time so
-    // the prefix is byte-stable. Reads are ~10% of base input cost and TTFT
-    // drops significantly on repeat turns.
-    system: [
-      {
-        type: "text",
-        text: systemPrompt,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
+    system: systemPrompt,
     messages: claudeHistory,
   });
 
