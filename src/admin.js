@@ -197,8 +197,19 @@ const T = {
   service_add_button: "+ მომსახურების დამატება",
   legend_service: "მომსახურება",
   label_service_name: "კატეგორიის დასახელება *",
-  label_procedures: "პროცედურები (თითო ხაზზე ერთი: სახელი | ფასი)",
-  label_procedures_hint: "მაგ.: ერთი იმპლანტი | 1000",
+  service_edit_subtitle:
+    "ჯერ შეიყვანეთ კატეგორიის ძირითადი ინფორმაცია, შემდეგ ქვემოთ დაამატეთ პროცედურები ფასებით.",
+  procedures_section: "პროცედურები",
+  procedure_add_button: "+ პროცედურის დამატება",
+  procedure_new_title: "ახალი პროცედურა",
+  procedure_edit_title: "პროცედურის რედაქტირება",
+  label_procedure_name: "პროცედურის სახელი *",
+  label_procedure_price: "ფასი (GEL)",
+  empty_procedures: "ამ კატეგორიაში პროცედურა ჯერ არ არის.",
+  empty_procedures_hint:
+    "დააჭირეთ „პროცედურის დამატება“ — სახელი და მინიმალური ფასი.",
+  confirm_delete_procedure: "ნამდვილად გსურთ ამ პროცედურის წაშლა?",
+  th_proc_count: "პროცედურები",
   label_brands: "ბრენდები (გამოყავით მძიმეებით)",
   label_note: "შენიშვნა",
   th_price_from: "ფასი",
@@ -781,33 +792,14 @@ ${errBanner}
   return layout(req, title, body);
 }
 
-function priceRangeLabel(procedures) {
-  const prices = (procedures || [])
-    .map((p) => p.price_from_gel)
-    .filter((n) => Number.isFinite(n));
-  if (!prices.length) return "";
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  return min === max ? `${min} GEL` : `${min}–${max} GEL`;
-}
-
 function renderServicesList(req, services) {
   const rows = services
     .map((s) => {
       const procs = s.procedures || [];
-      const search = `${s.name || ""} ${(s.brands || []).join(" ")} ${procs
-        .map((p) => p.name)
-        .join(" ")}`.toLowerCase();
-      const proceduresCell =
-        procs.length === 0
-          ? `<span class="muted">—</span>`
-          : procs.length === 1
-          ? esc(procs[0].name || "")
-          : `${procs.length}`;
+      const search = `${s.name || ""} ${(s.brands || []).join(" ")}`.toLowerCase();
       return `<tr data-search="${esc(search)}">
-  <td data-label="${esc(T.th_name)}"><strong>${esc(s.name || "")}</strong></td>
-  <td data-label="${esc(T.th_procedures)}">${proceduresCell}</td>
-  <td data-label="${esc(T.th_price_from)}">${esc(priceRangeLabel(procs))}</td>
+  <td data-label="${esc(T.th_name)}"><a href="/admin/services/${esc(s.id)}/edit" style="text-decoration:none;color:inherit"><strong>${esc(s.name || "")}</strong></a>${s.note ? `<div class="muted">${esc(s.note)}</div>` : ""}</td>
+  <td data-label="${esc(T.th_proc_count)}">${procs.length}</td>
   <td data-label="${esc(T.th_brands)}">${esc((s.brands || []).join(", "))}</td>
   <td class="row-actions">
     <a class="btn secondary" href="/admin/services/${esc(s.id)}/edit">${esc(T.btn_edit)}</a>
@@ -821,23 +813,47 @@ function renderServicesList(req, services) {
   <div class="search">${ICON_SEARCH}<input type="text" id="q" placeholder="${esc(T.search_placeholder)}" autocomplete="off"></div>
   <a class="btn" href="/admin/services/new">${esc(T.service_add_button)}</a>
 </div>
-<div class="table-wrap"><table><thead><tr><th>${esc(T.th_name)}</th><th>${esc(T.th_procedures)}</th><th>${esc(T.th_price_from)}</th><th>${esc(T.th_brands)}</th><th></th></tr></thead><tbody>${rows || `<tr><td class="empty" colspan="5">${esc(T.empty_services)}</td></tr>`}</tbody></table></div>`;
+<div class="table-wrap"><table><thead><tr><th>${esc(T.th_name)}</th><th>${esc(T.th_proc_count)}</th><th>${esc(T.th_brands)}</th><th></th></tr></thead><tbody>${rows || `<tr><td class="empty" colspan="4">${esc(T.empty_services)}</td></tr>`}</tbody></table></div>`;
   return layout(req, T.services_title, body);
 }
 
-function proceduresToText(procedures) {
-  return (procedures || [])
-    .filter((p) => p && p.name)
-    .map((p) => (p.price_from_gel != null ? `${p.name} | ${p.price_from_gel}` : p.name))
-    .join("\n");
-}
-
+// Service create form: just the category-level fields. Procedures are added
+// on the edit page after the category exists.
 function renderServiceForm(req, service, isNew, errorMsg) {
   const action = isNew ? "/admin/services" : `/admin/services/${esc(service.id)}`;
   const title = isNew ? T.service_add_title : T.service_edit_title;
   const errBanner = errorMsg
     ? `<div class="inline-error">${ICON_WARN}<span>${esc(errorMsg)}</span></div>`
     : "";
+
+  // Procedures table — only shown on edit, after the service has an id.
+  let proceduresSection = "";
+  if (!isNew) {
+    const procs = service.procedures || [];
+    const procRows = procs
+      .map(
+        (p) => `<tr>
+  <td data-label="${esc(T.label_procedure_name)}"><strong>${esc(p.name || "")}</strong></td>
+  <td data-label="${esc(T.label_procedure_price)}">${p.price_from_gel != null ? esc(p.price_from_gel) + " GEL" : `<span class="muted">—</span>`}</td>
+  <td class="row-actions">
+    <a class="btn secondary" href="/admin/services/${esc(service.id)}/procedures/${esc(p.id)}/edit">${esc(T.btn_edit)}</a>
+    <form method="post" action="/admin/services/${esc(service.id)}/procedures/${esc(p.id)}/delete" onsubmit="return confirm('${esc(T.confirm_delete_procedure)}')"><button class="btn danger" type="submit">${esc(T.btn_delete)}</button></form>
+  </td>
+</tr>`
+      )
+      .join("");
+    proceduresSection = `
+<h2 style="margin-top:36px;color:var(--ink);text-transform:none;letter-spacing:0;font-size:17px;font-weight:680">${esc(T.procedures_section)}</h2>
+<div class="toolbar" style="margin-top:6px">
+  <a class="btn" href="/admin/services/${esc(service.id)}/procedures/new">${esc(T.procedure_add_button)}</a>
+</div>
+${
+  procs.length
+    ? `<div class="table-wrap"><table><thead><tr><th>${esc(T.label_procedure_name)}</th><th>${esc(T.label_procedure_price)}</th><th></th></tr></thead><tbody>${procRows}</tbody></table></div>`
+    : `<div class="panel" style="text-align:center;padding:28px 20px"><p class="muted" style="margin:0">${esc(T.empty_procedures)}</p><p class="muted" style="margin:6px 0 0;font-size:12.5px">${esc(T.empty_procedures_hint)}</p></div>`
+}`;
+  }
+
   const body = `<form method="post" action="${action}">
 ${errBanner}
 <fieldset><legend>${esc(T.legend_service)}</legend>
@@ -847,13 +863,39 @@ ${errBanner}
   <input type="text" name="brands" value="${esc((service.brands || []).join(", "))}" placeholder="Damon, Invisalign">
   <label>${esc(T.label_note)}</label>
   <input type="text" name="note" value="${esc(service.note)}">
-  <label>${esc(T.label_procedures)}</label>
-  <textarea name="procedures" rows="6" placeholder="${esc(T.label_procedures_hint)}">${esc(proceduresToText(service.procedures))}</textarea>
-  <div class="hint">${esc(T.label_procedures_hint)}</div>
 </fieldset>
 <div class="form-actions">
   <button class="btn" type="submit">${isNew ? esc(T.btn_create) : esc(T.btn_save)}</button>
   <a class="btn secondary" href="/admin/services">${esc(T.btn_cancel)}</a>
+</div>
+</form>
+${proceduresSection}`;
+  return layout(req, title, body, isNew ? {} : { subtitle: T.service_edit_subtitle });
+}
+
+// Single-procedure form: name + price.
+function renderProcedureForm(req, service, procedure, isNew, errorMsg) {
+  const action = isNew
+    ? `/admin/services/${esc(service.id)}/procedures`
+    : `/admin/services/${esc(service.id)}/procedures/${esc(procedure.id)}`;
+  const title = isNew ? T.procedure_new_title : T.procedure_edit_title;
+  const errBanner = errorMsg
+    ? `<div class="inline-error">${ICON_WARN}<span>${esc(errorMsg)}</span></div>`
+    : "";
+  const body = `<p class="muted" style="margin:-2px 0 18px">${esc(service.name || "")}</p>
+<form method="post" action="${action}">
+${errBanner}
+<fieldset><legend>${esc(T.procedures_section)}</legend>
+  <div class="grid2">
+    <div class="field"><label>${esc(T.label_procedure_name)}</label>
+      <input type="text" name="name" required value="${esc(procedure.name)}"></div>
+    <div class="field"><label>${esc(T.label_procedure_price)}</label>
+      <input type="number" name="price_from_gel" min="0" value="${esc(procedure.price_from_gel)}"></div>
+  </div>
+</fieldset>
+<div class="form-actions">
+  <button class="btn" type="submit">${isNew ? esc(T.btn_create) : esc(T.btn_save)}</button>
+  <a class="btn secondary" href="/admin/services/${esc(service.id)}/edit">${esc(T.btn_cancel)}</a>
 </div>
 </form>`;
   return layout(req, title, body);
@@ -1052,28 +1094,8 @@ function mergeDoctorFromBody(existing, body) {
   return next;
 }
 
-// Parse "Name | Price" lines into procedures. Tolerant: missing-price entries
-// are accepted (name-only procedure); blank lines are ignored.
-function parseProceduresFromBody(body) {
-  if (!body || typeof body.procedures !== "string") return undefined;
-  const lines = body.procedures.split(/\r?\n/);
-  const procs = [];
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) continue;
-    const [namePart, pricePart] = line.split("|");
-    const name = (namePart || "").trim();
-    if (!name) continue;
-    const proc = { name };
-    if (pricePart !== undefined) {
-      const n = parseInt(String(pricePart).replace(/[^\d-]/g, ""), 10);
-      if (Number.isFinite(n)) proc.price_from_gel = n;
-    }
-    procs.push(proc);
-  }
-  return procs;
-}
-
+// Service form parses category-level fields only. Procedures are managed via
+// the dedicated procedure routes (master-detail).
 function parseServiceFromBody(body) {
   const service = {};
   service.name = (body.name || "").trim();
@@ -1081,9 +1103,15 @@ function parseServiceFromBody(body) {
   if (brands) service.brands = brands;
   const note = nullEmpty(body.note);
   if (note) service.note = note;
-  const procs = parseProceduresFromBody(body);
-  service.procedures = procs || [];
   return service;
+}
+
+function parseProcedureFromBody(body) {
+  const p = {};
+  p.name = (body.name || "").trim();
+  const price = parseInt(body.price_from_gel, 10);
+  if (Number.isFinite(price)) p.price_from_gel = price;
+  return p;
 }
 
 function statusTag(status) {
@@ -1446,9 +1474,11 @@ function buildRouter() {
     const kb = kbStore.load();
     if (!Array.isArray(kb.services)) kb.services = [];
     service.id = crypto.randomUUID();
+    service.procedures = []; // empty until admin adds procedures on the edit page
     kb.services.push(service);
     kbStore.save(kb);
-    res.redirect(`/admin/services?flash=${encodeURIComponent(T.added + ": " + service.name)}`);
+    // Land on the edit page so the admin can immediately add procedures.
+    res.redirect(`/admin/services/${service.id}/edit?flash=${encodeURIComponent(T.added + ": " + service.name)}`);
   });
   router.get("/services/:id/edit", (req, res) => {
     const kb = kbStore.load();
@@ -1461,11 +1491,31 @@ function buildRouter() {
     const idx = (kb.services || []).findIndex((s) => s.id === req.params.id);
     if (idx < 0) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
     const parsed = parseServiceFromBody(req.body);
-    parsed.id = req.params.id;
-    if (!parsed.name) return res.status(400).send(renderServiceForm(req, parsed, false, T.inline_error));
-    kb.services[idx] = parsed;
+    if (!parsed.name) {
+      // Preserve procedures + id so the re-render shows the existing list.
+      return res.status(400).send(
+        renderServiceForm(
+          req,
+          { ...kb.services[idx], ...parsed, id: req.params.id },
+          false,
+          T.inline_error
+        )
+      );
+    }
+    // Merge category-level edits into the existing service; never touch
+    // procedures here — they're managed by /procedures routes.
+    kb.services[idx] = {
+      ...kb.services[idx],
+      name: parsed.name,
+      brands: parsed.brands,
+      note: parsed.note,
+    };
+    // Clean undefined keys (e.g. brands/note cleared) so the JSON stays tidy.
+    for (const k of ["brands", "note"]) {
+      if (kb.services[idx][k] === undefined) delete kb.services[idx][k];
+    }
     kbStore.save(kb);
-    res.redirect(`/admin/services?flash=${encodeURIComponent(T.saved + ": " + parsed.name)}`);
+    res.redirect(`/admin/services/${req.params.id}/edit?flash=${encodeURIComponent(T.saved)}`);
   });
   router.post("/services/:id/delete", (req, res) => {
     const kb = kbStore.load();
@@ -1474,6 +1524,73 @@ function buildRouter() {
     if (kb.services.length === before) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
     kbStore.save(kb);
     res.redirect("/admin/services?flash=" + encodeURIComponent(T.deleted));
+  });
+
+  // --- Procedures (nested under a service) ---
+  const findService = (kb, sid) => (kb.services || []).find((s) => s.id === sid);
+
+  router.get("/services/:sid/procedures/new", (req, res) => {
+    const kb = kbStore.load();
+    const svc = findService(kb, req.params.sid);
+    if (!svc) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
+    res.send(renderProcedureForm(req, svc, {}, true));
+  });
+  router.post("/services/:sid/procedures", (req, res) => {
+    const kb = kbStore.load();
+    const svc = findService(kb, req.params.sid);
+    if (!svc) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
+    const proc = parseProcedureFromBody(req.body);
+    if (!proc.name) {
+      return res
+        .status(400)
+        .send(renderProcedureForm(req, svc, proc, true, T.inline_error));
+    }
+    proc.id = crypto.randomUUID();
+    if (!Array.isArray(svc.procedures)) svc.procedures = [];
+    svc.procedures.push(proc);
+    kbStore.save(kb);
+    res.redirect(`/admin/services/${svc.id}/edit?flash=${encodeURIComponent(T.added + ": " + proc.name)}`);
+  });
+  router.get("/services/:sid/procedures/:pid/edit", (req, res) => {
+    const kb = kbStore.load();
+    const svc = findService(kb, req.params.sid);
+    if (!svc) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
+    const proc = (svc.procedures || []).find((p) => p.id === req.params.pid);
+    if (!proc) return res.redirect(`/admin/services/${svc.id}/edit?error=` + encodeURIComponent(T.not_found));
+    res.send(renderProcedureForm(req, svc, proc, false));
+  });
+  router.post("/services/:sid/procedures/:pid", (req, res) => {
+    const kb = kbStore.load();
+    const svc = findService(kb, req.params.sid);
+    if (!svc) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
+    const pIdx = (svc.procedures || []).findIndex((p) => p.id === req.params.pid);
+    if (pIdx < 0) return res.redirect(`/admin/services/${svc.id}/edit?error=` + encodeURIComponent(T.not_found));
+    const parsed = parseProcedureFromBody(req.body);
+    if (!parsed.name) {
+      return res
+        .status(400)
+        .send(renderProcedureForm(req, svc, { ...parsed, id: req.params.pid }, false, T.inline_error));
+    }
+    svc.procedures[pIdx] = {
+      ...svc.procedures[pIdx],
+      name: parsed.name,
+      price_from_gel: parsed.price_from_gel,
+    };
+    if (svc.procedures[pIdx].price_from_gel === undefined) delete svc.procedures[pIdx].price_from_gel;
+    kbStore.save(kb);
+    res.redirect(`/admin/services/${svc.id}/edit?flash=${encodeURIComponent(T.saved + ": " + parsed.name)}`);
+  });
+  router.post("/services/:sid/procedures/:pid/delete", (req, res) => {
+    const kb = kbStore.load();
+    const svc = findService(kb, req.params.sid);
+    if (!svc) return res.redirect("/admin/services?error=" + encodeURIComponent(T.not_found));
+    const before = (svc.procedures || []).length;
+    svc.procedures = (svc.procedures || []).filter((p) => p.id !== req.params.pid);
+    if (svc.procedures.length === before) {
+      return res.redirect(`/admin/services/${svc.id}/edit?error=` + encodeURIComponent(T.not_found));
+    }
+    kbStore.save(kb);
+    res.redirect(`/admin/services/${svc.id}/edit?flash=` + encodeURIComponent(T.deleted));
   });
 
   // Insurance partners

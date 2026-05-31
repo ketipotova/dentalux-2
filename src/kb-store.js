@@ -44,15 +44,23 @@ function ensureIds(kb) {
   // categories with a single procedure carrying the price. Admin can later
   // add more procedures or rename them.
   for (const s of kb.services || []) {
-    if (Array.isArray(s.procedures)) continue;
-    s.procedures = [
-      {
-        name: "ძირითადი",
-        price_from_gel: s.price_from_gel,
-      },
-    ];
-    delete s.price_from_gel;
-    changed = true;
+    if (!Array.isArray(s.procedures)) {
+      s.procedures = [
+        {
+          name: "ძირითადი",
+          price_from_gel: s.price_from_gel,
+        },
+      ];
+      delete s.price_from_gel;
+      changed = true;
+    }
+    // Ensure every procedure has a stable id so it can be addressed by URL.
+    for (const p of s.procedures) {
+      if (!p.id) {
+        p.id = crypto.randomUUID();
+        changed = true;
+      }
+    }
   }
   return changed;
 }
