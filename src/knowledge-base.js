@@ -113,13 +113,21 @@ function buildSystemPrompt() {
     ? `${phones.join(" or ")} (WhatsApp available)`
     : "the clinic phone numbers";
 
-  const consult = (kb.services || []).find((s) =>
-    /კონსულტაცია|consultation/i.test(s.name || "")
-  );
-  const consultPrice =
-    consult && Array.isArray(consult.procedures)
-      ? consult.procedures.find((p) => p.price_from_gel != null)?.price_from_gel
-      : null;
+  // Find a consultation-priced procedure anywhere across categories. Match on
+  // either the category name or the procedure name (post-taxonomy migration,
+  // "consultation" is a procedure under the ორთოდონტია category).
+  let consultPrice = null;
+  for (const s of kb.services || []) {
+    const isConsultCategory = /კონსულტაცია|consultation/i.test(s.name || "");
+    for (const p of s.procedures || []) {
+      const isConsultProc = /კონსულტაცია|consultation/i.test(p.name || "");
+      if ((isConsultCategory || isConsultProc) && p.price_from_gel != null) {
+        consultPrice = p.price_from_gel;
+        break;
+      }
+    }
+    if (consultPrice != null) break;
+  }
   const consultClause =
     consultPrice != null
       ? `consultation is only ${consultPrice} GEL; first visits are unhurried`
