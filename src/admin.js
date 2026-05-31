@@ -2,6 +2,7 @@ const express = require("express");
 const crypto = require("crypto");
 const kbStore = require("./kb-store");
 const stats = require("./stats");
+const { refineInstruction } = require("./llm");
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -66,6 +67,7 @@ const T = {
   nav_routing: "ექიმის შერჩევა",
   nav_payment: "გადახდის მეთოდები",
   nav_stats: "სტატისტიკა",
+  nav_instructions: "ინსტრუქციები",
 
   dashboard_subtitle:
     "ცოცხალი ცოდნის ბაზა. აქ შესრულებული ცვლილებები მაშინვე აისახება ბოტში.",
@@ -102,6 +104,33 @@ const T = {
   stats_empty: "მონაცემები ჯერ არ არის.",
   stats_not_persistent: "⚠ /data ვოლუმი არ არის მიერთებული — სტატისტიკა გადატვირთვისას იშლება.",
 
+  instr_title: "ბოტის ინსტრუქციები",
+  instr_subtitle:
+    "დაუმატეთ შენიშვნა, თუ როგორ უნდა უპასუხოს ბოტმა კონკრეტულ კითხვებზე ან სიტუაციებზე. AI გადაამუშავებს თქვენი ტექსტს ბოტის ტონის შესაბამისად. დამტკიცებული ინსტრუქცია მაშინვე გადადის ბოტთან.",
+  instr_add_button: "+ ინსტრუქციის დამატება",
+  instr_new_title: "ახალი ინსტრუქცია",
+  instr_edit_title: "ინსტრუქციის რედაქტირება",
+  instr_label_raw: "რა გსურთ შეცვალოთ?",
+  instr_label_raw_hint:
+    "მაგ.: „თუ პაციენტი იკითხავს სიბრძნის კბილის ამოღებაზე, აღნიშნე, რომ რეაბილიტაცია 3–5 დღეა.“",
+  instr_label_refined: "AI-ით დახვეწილი ვერსია",
+  instr_label_refined_hint:
+    "ეს არის ის ვერსია, რომელიც ბოტში გადადის. შეგიძლიათ ხელით დაარედაქტიროთ.",
+  instr_btn_refine: "AI-ით გადამუშავება და შენახვა",
+  instr_btn_re_refine: "ხელახლა გადამუშავება",
+  instr_btn_activate: "გააქტიურება",
+  instr_btn_disable: "გათიშვა",
+  instr_status_active: "აქტიური",
+  instr_status_disabled: "გათიშული",
+  instr_status_rejected: "უარყოფილია",
+  instr_th_status: "სტატუსი",
+  instr_th_summary: "ინსტრუქცია",
+  instr_rejected_label: "AI-მ უარყო ეს ინსტრუქცია:",
+  instr_empty: "ინსტრუქცია ჯერ არ არის.",
+  instr_refine_failed:
+    "AI-ით გადამუშავება ვერ მოხერხდა. გთხოვთ თავიდან სცადოთ.",
+  instr_required: "გთხოვთ შეიყვანეთ ინსტრუქცია.",
+  instr_confirm_delete: "ნამდვილად გსურთ ამ ინსტრუქციის წაშლა?",
   btn_add: "დამატება",
   btn_save: "შენახვა",
   btn_create: "შექმნა",
@@ -167,11 +196,13 @@ const T = {
   service_edit_title: "მომსახურების რედაქტირება",
   service_add_button: "+ მომსახურების დამატება",
   legend_service: "მომსახურება",
-  label_service_name: "დასახელება *",
-  label_price_from: "მინიმალური ფასი (GEL)",
+  label_service_name: "კატეგორიის დასახელება *",
+  label_procedures: "პროცედურები (თითო ხაზზე ერთი: სახელი | ფასი)",
+  label_procedures_hint: "მაგ.: ერთი იმპლანტი | 1000",
   label_brands: "ბრენდები (გამოყავით მძიმეებით)",
   label_note: "შენიშვნა",
-  th_price_from: "ფასიდან",
+  th_price_from: "ფასი",
+  th_procedures: "პროცედურები",
   th_brands: "ბრენდები",
   th_note: "შენიშვნა",
 
@@ -245,6 +276,7 @@ const NAV = [
   { path: "routing", label: T.nav_routing },
   { path: "payment", label: T.nav_payment },
   { path: "stats", label: T.nav_stats },
+  { path: "instructions", label: T.nav_instructions },
 ];
 
 const CSS = `
@@ -460,6 +492,17 @@ details.section[open]>summary .chev{transform:rotate(90deg)}
 .tag.c{background:var(--accent-tint);color:var(--accent-d)}
 .tag.g{background:#F1E7D2;color:#8A6A2E}
 .tag.f{background:var(--danger-bg);color:var(--danger-fg)}
+.tag.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag.off{background:#E9EAEE;color:var(--ink-2)}
+
+/* Instructions list */
+.instr-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;box-shadow:var(--shadow)}
+.instr-card .head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.instr-card .refined{font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap}
+.instr-card .raw{font-size:12.5px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.instr-card .actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.instr-card.rejected{border-color:#E6CFC7;background:#FFF8F6}
+.instr-card .rejected-msg{color:var(--danger-fg);font-size:13.5px;margin-top:6px}
 `;
 
 // --- Layout ---
@@ -474,6 +517,7 @@ const ICONS = {
   routing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.3 6.7l7.4 4M8.3 17.3l7.4-4"/></svg>',
   payment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>',
   stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>',
+  instructions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>',
 };
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>';
 const ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
@@ -737,13 +781,33 @@ ${errBanner}
   return layout(req, title, body);
 }
 
+function priceRangeLabel(procedures) {
+  const prices = (procedures || [])
+    .map((p) => p.price_from_gel)
+    .filter((n) => Number.isFinite(n));
+  if (!prices.length) return "";
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max ? `${min} GEL` : `${min}–${max} GEL`;
+}
+
 function renderServicesList(req, services) {
   const rows = services
     .map((s) => {
-      const search = `${s.name || ""} ${(s.brands || []).join(" ")}`.toLowerCase();
+      const procs = s.procedures || [];
+      const search = `${s.name || ""} ${(s.brands || []).join(" ")} ${procs
+        .map((p) => p.name)
+        .join(" ")}`.toLowerCase();
+      const proceduresCell =
+        procs.length === 0
+          ? `<span class="muted">—</span>`
+          : procs.length === 1
+          ? esc(procs[0].name || "")
+          : `${procs.length}`;
       return `<tr data-search="${esc(search)}">
   <td data-label="${esc(T.th_name)}"><strong>${esc(s.name || "")}</strong></td>
-  <td data-label="${esc(T.th_price_from)}">${s.price_from_gel != null ? esc(s.price_from_gel) + " GEL" : ""}</td>
+  <td data-label="${esc(T.th_procedures)}">${proceduresCell}</td>
+  <td data-label="${esc(T.th_price_from)}">${esc(priceRangeLabel(procs))}</td>
   <td data-label="${esc(T.th_brands)}">${esc((s.brands || []).join(", "))}</td>
   <td class="row-actions">
     <a class="btn secondary" href="/admin/services/${esc(s.id)}/edit">${esc(T.btn_edit)}</a>
@@ -757,8 +821,15 @@ function renderServicesList(req, services) {
   <div class="search">${ICON_SEARCH}<input type="text" id="q" placeholder="${esc(T.search_placeholder)}" autocomplete="off"></div>
   <a class="btn" href="/admin/services/new">${esc(T.service_add_button)}</a>
 </div>
-<div class="table-wrap"><table><thead><tr><th>${esc(T.th_name)}</th><th>${esc(T.th_price_from)}</th><th>${esc(T.th_brands)}</th><th></th></tr></thead><tbody>${rows || `<tr><td class="empty" colspan="4">${esc(T.empty_services)}</td></tr>`}</tbody></table></div>`;
+<div class="table-wrap"><table><thead><tr><th>${esc(T.th_name)}</th><th>${esc(T.th_procedures)}</th><th>${esc(T.th_price_from)}</th><th>${esc(T.th_brands)}</th><th></th></tr></thead><tbody>${rows || `<tr><td class="empty" colspan="5">${esc(T.empty_services)}</td></tr>`}</tbody></table></div>`;
   return layout(req, T.services_title, body);
+}
+
+function proceduresToText(procedures) {
+  return (procedures || [])
+    .filter((p) => p && p.name)
+    .map((p) => (p.price_from_gel != null ? `${p.name} | ${p.price_from_gel}` : p.name))
+    .join("\n");
 }
 
 function renderServiceForm(req, service, isNew, errorMsg) {
@@ -772,12 +843,13 @@ ${errBanner}
 <fieldset><legend>${esc(T.legend_service)}</legend>
   <label>${esc(T.label_service_name)}<span class="req">*</span></label>
   <input type="text" name="name" required value="${esc(service.name)}">
-  <label>${esc(T.label_price_from)}</label>
-  <input type="number" name="price_from_gel" min="0" value="${esc(service.price_from_gel)}">
   <label>${esc(T.label_brands)}</label>
   <input type="text" name="brands" value="${esc((service.brands || []).join(", "))}" placeholder="Damon, Invisalign">
   <label>${esc(T.label_note)}</label>
   <input type="text" name="note" value="${esc(service.note)}">
+  <label>${esc(T.label_procedures)}</label>
+  <textarea name="procedures" rows="6" placeholder="${esc(T.label_procedures_hint)}">${esc(proceduresToText(service.procedures))}</textarea>
+  <div class="hint">${esc(T.label_procedures_hint)}</div>
 </fieldset>
 <div class="form-actions">
   <button class="btn" type="submit">${isNew ? esc(T.btn_create) : esc(T.btn_save)}</button>
@@ -980,16 +1052,121 @@ function mergeDoctorFromBody(existing, body) {
   return next;
 }
 
+// Parse "Name | Price" lines into procedures. Tolerant: missing-price entries
+// are accepted (name-only procedure); blank lines are ignored.
+function parseProceduresFromBody(body) {
+  if (!body || typeof body.procedures !== "string") return undefined;
+  const lines = body.procedures.split(/\r?\n/);
+  const procs = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const [namePart, pricePart] = line.split("|");
+    const name = (namePart || "").trim();
+    if (!name) continue;
+    const proc = { name };
+    if (pricePart !== undefined) {
+      const n = parseInt(String(pricePart).replace(/[^\d-]/g, ""), 10);
+      if (Number.isFinite(n)) proc.price_from_gel = n;
+    }
+    procs.push(proc);
+  }
+  return procs;
+}
+
 function parseServiceFromBody(body) {
   const service = {};
   service.name = (body.name || "").trim();
-  const price = parseInt(body.price_from_gel, 10);
-  if (Number.isFinite(price)) service.price_from_gel = price;
   const brands = csvField(body.brands);
   if (brands) service.brands = brands;
   const note = nullEmpty(body.note);
   if (note) service.note = note;
+  const procs = parseProceduresFromBody(body);
+  service.procedures = procs || [];
   return service;
+}
+
+function statusTag(status) {
+  if (status === "active") return `<span class="tag ok">${esc(T.instr_status_active)}</span>`;
+  if (status === "disabled") return `<span class="tag off">${esc(T.instr_status_disabled)}</span>`;
+  if (status === "rejected") return `<span class="tag f">${esc(T.instr_status_rejected)}</span>`;
+  return "";
+}
+
+function renderInstructionsList(req, items) {
+  const cards = items
+    .map((i) => {
+      const isRejected = i.status === "rejected";
+      const toggleLabel = i.status === "active" ? T.instr_btn_disable : T.instr_btn_activate;
+      const refinedBlock = i.refined
+        ? `<div class="refined">${esc(i.refined)}</div>`
+        : "";
+      const rejectedBlock = isRejected
+        ? `<div class="rejected-msg"><strong>${esc(T.instr_rejected_label)}</strong> ${esc(
+            i.rejected_reason || ""
+          )}</div>`
+        : "";
+      const rawBlock = i.raw
+        ? `<div class="raw"><strong>თქვენი ვერსია:</strong> ${esc(i.raw)}</div>`
+        : "";
+      return `<div class="instr-card${isRejected ? " rejected" : ""}">
+  <div class="head">${statusTag(i.status)}</div>
+  ${refinedBlock}
+  ${rejectedBlock}
+  ${rawBlock}
+  <div class="actions">
+    <a class="btn secondary" href="/admin/instructions/${esc(i.id)}/edit">${esc(T.btn_edit)}</a>
+    ${
+      isRejected
+        ? ""
+        : `<form method="post" action="/admin/instructions/${esc(i.id)}/toggle"><button class="btn secondary" type="submit">${esc(toggleLabel)}</button></form>`
+    }
+    <form method="post" action="/admin/instructions/${esc(i.id)}/delete" onsubmit="return confirm('${esc(T.instr_confirm_delete)}')"><button class="btn danger" type="submit">${esc(T.btn_delete)}</button></form>
+  </div>
+</div>`;
+    })
+    .join("");
+  const body = `<div class="toolbar"><a class="btn" href="/admin/instructions/new">${esc(T.instr_add_button)}</a></div>
+${cards || `<p class="muted">${esc(T.instr_empty)}</p>`}`;
+  return layout(req, T.instr_title, body, { subtitle: T.instr_subtitle });
+}
+
+function renderInstructionForm(req, item, errorMsg) {
+  const isNew = !item || !item.id;
+  const raw = (item && item.raw) || "";
+  const refined = (item && item.refined) || "";
+  const action = isNew ? "/admin/instructions" : `/admin/instructions/${esc(item.id)}`;
+  const title = isNew ? T.instr_new_title : T.instr_edit_title;
+  const errBanner = errorMsg
+    ? `<div class="inline-error">${ICON_WARN}<span>${esc(errorMsg)}</span></div>`
+    : "";
+  // On the edit page, the AI-refined version is also editable so admin can
+  // tweak the wording manually. On the new page we only collect the raw note
+  // — the refined version is generated when they submit.
+  const refinedField = isNew
+    ? ""
+    : `<label>${esc(T.instr_label_refined)}</label>
+       <textarea name="refined" rows="6">${esc(refined)}</textarea>
+       <div class="hint">${esc(T.instr_label_refined_hint)}</div>`;
+  const submitLabel = isNew ? T.instr_btn_refine : T.btn_save;
+  const reRefineBtn = isNew
+    ? ""
+    : `<form method="post" action="/admin/instructions/${esc(item.id)}/refine" style="display:inline"><button class="btn secondary" type="submit">${esc(T.instr_btn_re_refine)}</button></form>`;
+  const body = `<form method="post" action="${action}">
+${errBanner}
+<fieldset><legend>${esc(T.instr_new_title)}</legend>
+  <label>${esc(T.instr_label_raw)}<span class="req">*</span></label>
+  <textarea name="raw" rows="5" required>${esc(raw)}</textarea>
+  <div class="hint">${esc(T.instr_label_raw_hint)}</div>
+  ${refinedField}
+</fieldset>
+<div class="form-actions">
+  <button class="btn" type="submit">${esc(submitLabel)}</button>
+  ${reRefineBtn}
+  <a class="btn secondary" href="/admin/instructions">${esc(T.btn_cancel)}</a>
+</div>
+</form>`;
+  return layout(req, title, body);
 }
 
 function renderStats(req) {
@@ -1092,6 +1269,119 @@ function buildRouter() {
 
   router.get("/stats", (req, res) => {
     res.send(renderStats(req));
+  });
+
+  // Custom instructions (admin notes refined by AI into prompt additions)
+  router.get("/instructions", (req, res) => {
+    res.send(renderInstructionsList(req, kbStore.load().custom_instructions || []));
+  });
+  router.get("/instructions/new", (req, res) => {
+    res.send(renderInstructionForm(req, {}));
+  });
+  router.post("/instructions", async (req, res) => {
+    const raw = (req.body.raw || "").trim();
+    if (!raw) return res.status(400).send(renderInstructionForm(req, { raw }, T.instr_required));
+    let result;
+    try {
+      result = await refineInstruction(raw);
+    } catch (e) {
+      console.error("[instructions] refine failed:", e.message);
+      return res
+        .status(502)
+        .send(renderInstructionForm(req, { raw }, T.instr_refine_failed));
+    }
+    const kb = kbStore.load();
+    if (!Array.isArray(kb.custom_instructions)) kb.custom_instructions = [];
+    const now = new Date().toISOString();
+    const entry = {
+      id: crypto.randomUUID(),
+      raw,
+      refined: result.refined || "",
+      status: result.rejected ? "rejected" : "active",
+      rejected_reason: result.rejected || null,
+      created_at: now,
+      updated_at: now,
+    };
+    kb.custom_instructions.push(entry);
+    kbStore.save(kb);
+    res.redirect("/admin/instructions?flash=" + encodeURIComponent(T.saved));
+  });
+  router.get("/instructions/:id/edit", (req, res) => {
+    const kb = kbStore.load();
+    const item = (kb.custom_instructions || []).find((i) => i.id === req.params.id);
+    if (!item) return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    res.send(renderInstructionForm(req, item));
+  });
+  router.post("/instructions/:id", (req, res) => {
+    const kb = kbStore.load();
+    const idx = (kb.custom_instructions || []).findIndex((i) => i.id === req.params.id);
+    if (idx < 0) return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    const raw = (req.body.raw || "").trim();
+    const refined = (req.body.refined || "").trim();
+    if (!raw) {
+      return res
+        .status(400)
+        .send(renderInstructionForm(req, { ...kb.custom_instructions[idx], raw, refined }, T.instr_required));
+    }
+    kb.custom_instructions[idx] = {
+      ...kb.custom_instructions[idx],
+      raw,
+      refined,
+      // Manual edits clear the rejected flag — staff is taking ownership of the text.
+      status:
+        kb.custom_instructions[idx].status === "rejected" ? "disabled" : kb.custom_instructions[idx].status,
+      rejected_reason: null,
+      updated_at: new Date().toISOString(),
+    };
+    kbStore.save(kb);
+    res.redirect("/admin/instructions?flash=" + encodeURIComponent(T.saved));
+  });
+  router.post("/instructions/:id/refine", async (req, res) => {
+    const kb = kbStore.load();
+    const idx = (kb.custom_instructions || []).findIndex((i) => i.id === req.params.id);
+    if (idx < 0) return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    const raw = kb.custom_instructions[idx].raw || "";
+    let result;
+    try {
+      result = await refineInstruction(raw);
+    } catch (e) {
+      console.error("[instructions] re-refine failed:", e.message);
+      return res
+        .status(502)
+        .send(renderInstructionForm(req, kb.custom_instructions[idx], T.instr_refine_failed));
+    }
+    kb.custom_instructions[idx] = {
+      ...kb.custom_instructions[idx],
+      refined: result.refined || "",
+      status: result.rejected ? "rejected" : "active",
+      rejected_reason: result.rejected || null,
+      updated_at: new Date().toISOString(),
+    };
+    kbStore.save(kb);
+    res.redirect("/admin/instructions?flash=" + encodeURIComponent(T.saved));
+  });
+  router.post("/instructions/:id/toggle", (req, res) => {
+    const kb = kbStore.load();
+    const idx = (kb.custom_instructions || []).findIndex((i) => i.id === req.params.id);
+    if (idx < 0) return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    const cur = kb.custom_instructions[idx];
+    if (cur.status === "rejected") {
+      return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    }
+    cur.status = cur.status === "active" ? "disabled" : "active";
+    cur.updated_at = new Date().toISOString();
+    kbStore.save(kb);
+    res.redirect("/admin/instructions?flash=" + encodeURIComponent(T.saved));
+  });
+  router.post("/instructions/:id/delete", (req, res) => {
+    const kb = kbStore.load();
+    const before = (kb.custom_instructions || []).length;
+    kb.custom_instructions = (kb.custom_instructions || []).filter((i) => i.id !== req.params.id);
+    if (kb.custom_instructions.length === before) {
+      return res.redirect("/admin/instructions?error=" + encodeURIComponent(T.not_found));
+    }
+    kbStore.save(kb);
+    res.redirect("/admin/instructions?flash=" + encodeURIComponent(T.deleted));
   });
 
   // Doctors

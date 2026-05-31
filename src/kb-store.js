@@ -40,6 +40,20 @@ function ensureIds(kb) {
       }
     }
   }
+  // One-time migration: flat services (price_from_gel at top level) become
+  // categories with a single procedure carrying the price. Admin can later
+  // add more procedures or rename them.
+  for (const s of kb.services || []) {
+    if (Array.isArray(s.procedures)) continue;
+    s.procedures = [
+      {
+        name: "ძირითადი",
+        price_from_gel: s.price_from_gel,
+      },
+    ];
+    delete s.price_from_gel;
+    changed = true;
+  }
   return changed;
 }
 

@@ -122,4 +122,43 @@ async function getResponse(userId, userMessage) {
   return reply;
 }
 
-module.exports = { getResponse };
+// Meta-prompt that rewrites a clinic admin's raw note into a clean,
+// on-tone instruction the bot can follow, or rejects it if it's outside
+// the bot's role. Returns { refined } or { rejected: <reason> }.
+const REFINE_SYSTEM = `You help the Dentalux dental clinic's Instagram DM assistant stay on-brand and safe. A clinic staff member has written a behavioural note they want added to the assistant's system prompt. Refine it into a clean, professional instruction.
+
+Constraints for a refined output:
+- Match the assistant's existing tone: warm but elegant private-clinic concierge. Polished Georgian by default (the assistant also handles other languages).
+- Stay inside the assistant's role: information, doctor recommendations, scheduling guidance. NEVER medical diagnosis, treatment instructions, dosage, or anything that should come from an in-person doctor consultation.
+- Respect existing care boundaries: the bot never replaces a doctor.
+- Be specific and actionable. Prefer a short, named-section format (e.g. a heading in CAPS followed by 1–3 sentences). Under 120 words.
+- Output ONLY the refined instruction text, no preamble like "Here is the refined version:".
+
+Reject (do NOT refine) and reply with exactly "REJECT: <one sentence in Georgian explaining why>" if the note:
+- asks the bot to give medical advice, diagnoses, dosages, or treatment recommendations;
+- asks the bot to lie, mislead, hide information from patients, or fabricate credentials;
+- asks the bot to recommend or refuse specific doctors based on personal bias rather than the routing logic;
+- asks the bot to collect, store, or leak personal medical data;
+- asks the bot to override safety, emergency-routing, or care-boundary rules;
+- is otherwise outside the bot's scope.
+
+When in doubt about safety, reject.`;
+
+async function refineInstruction(rawText) {
+  if (!rawText || !rawText.trim()) throw new Error("Empty instruction");
+  const response = await anthropic.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 600,
+    system: REFINE_SYSTEM,
+    messages: [{ role: "user", content: rawText.trim() }],
+  });
+  const block = response.content?.find((b) => b.type === "text");
+  const out = (block && block.text ? block.text : "").trim();
+  if (!out) throw new Error("Refiner returned empty response");
+  if (/^REJECT:/i.test(out)) {
+    return { rejected: out.replace(/^REJECT:\s*/i, "").trim() };
+  }
+  return { refined: out };
+}
+
+module.exports = { getResponse, refineInstruction };

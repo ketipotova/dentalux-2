@@ -47,10 +47,31 @@ function buildSystemPrompt() {
   const kb = kbStore.load();
   const services = kb.services
     .map((s) => {
-      let line = `- ${s.name}: ${s.price_from_gel} GEL-დან`;
-      if (s.brands) line += ` (${s.brands.join(", ")})`;
-      if (s.note) line += ` — ${s.note}`;
-      return line;
+      const procs = Array.isArray(s.procedures) ? s.procedures : [];
+      // Single procedure (or none): keep the compact one-line form so the
+      // prompt doesn't bloat for categories that haven't been split out.
+      if (procs.length <= 1) {
+        const price = procs[0] && procs[0].price_from_gel;
+        let line = `- ${s.name}`;
+        if (price != null) line += `: ${price} GEL-დან`;
+        if (s.brands) line += ` (${s.brands.join(", ")})`;
+        if (s.note) line += ` — ${s.note}`;
+        return line;
+      }
+      // Multiple procedures: category header + bulleted procedures.
+      let header = `- ${s.name}`;
+      if (s.brands) header += ` (${s.brands.join(", ")})`;
+      if (s.note) header += ` — ${s.note}`;
+      const lines = procs
+        .filter((p) => p.name)
+        .map((p) => {
+          const price = p.price_from_gel;
+          return price != null
+            ? `  • ${p.name}: ${price} GEL-დან`
+            : `  • ${p.name}`;
+        })
+        .join("\n");
+      return `${header}\n${lines}`;
     })
     .join("\n");
 
@@ -95,9 +116,13 @@ function buildSystemPrompt() {
   const consult = (kb.services || []).find((s) =>
     /კონსულტაცია|consultation/i.test(s.name || "")
   );
+  const consultPrice =
+    consult && Array.isArray(consult.procedures)
+      ? consult.procedures.find((p) => p.price_from_gel != null)?.price_from_gel
+      : null;
   const consultClause =
-    consult && consult.price_from_gel != null
-      ? `consultation is only ${consult.price_from_gel} GEL; first visits are unhurried`
+    consultPrice != null
+      ? `consultation is only ${consultPrice} GEL; first visits are unhurried`
       : "first visits are unhurried";
 
   const tech = (kb.technology && kb.technology.diagnocat_ai) || {};
@@ -111,6 +136,17 @@ function buildSystemPrompt() {
   const complianceLine = compBodies
     ? `All protocols follow ${compBodies}${comp.infection_control ? `; ${comp.infection_control}` : ""}.`
     : "All protocols follow recognized local and international dental guidelines.";
+
+  // Admin-authored custom instructions, refined by AI before being saved. Only
+  // entries with status: "active" are injected. Block is omitted entirely when
+  // there are none, so the prompt stays byte-identical to the no-custom case.
+  const activeInstructions = (kb.custom_instructions || [])
+    .filter((i) => i && i.status === "active" && (i.refined || "").trim());
+  const customInstructionsBlock = activeInstructions.length
+    ? `\nCLINIC-SPECIFIC INSTRUCTIONS (added by clinic staff — follow these alongside the rules above. If anything here conflicts with the care boundaries or safety rules above, the safety rules win):\n${activeInstructions
+        .map((i) => `- ${i.refined.trim()}`)
+        .join("\n\n")}\n`
+    : "";
 
   return `You are the official AI assistant for Dentalux dental clinic in Batumi, Georgia.
 You help patients via Instagram DM with information about services, pricing, appointments, and insurance.
@@ -274,7 +310,7 @@ How to do it:
 TECHNOLOGY: ${techLine}
 
 COMPLIANCE: ${complianceLine}
-
+${customInstructionsBlock}
 Keep responses concise and helpful. If a question is outside your knowledge, recommend the patient call the clinic directly.`;
 }
 
